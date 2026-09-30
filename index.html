@@ -1,0 +1,1695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SS&amp;C Third-Party Network Dashboard</title>
+<!-- No external dependencies — fully self-contained, works offline. -->
+<style>
+:root {
+  color-scheme: light;
+  --navy: #131E58;
+  --blue: #0077C8;
+  --blue-100: #E5F1F9;
+  --blue-200: #CCE4F4;
+  --blue-400: #66ADDE;
+  --cobalt: #0B4D99;
+  --teal: #1099AC;
+  --dark-gray: #344157;
+  --grey: #858EA0;
+  --grey-100: #F3F4F5;
+  --grey-200: #E7E8EC;
+  --yellow: #F5AB0A;
+  --yellow-100: #FEF7E6;
+  --land: #244a80;
+  --land-hover: #2a5590;
+  --high-bg: #C6EFCE; --high-fg: #006100;
+  --med-bg:  #FFEB9C; --med-fg:  #9C6500;
+  --low-bg:  #FFC7CE; --low-fg:  #9C0006;
+}
+* { box-sizing: border-box; }
+body {
+  font-family: 'Calibri', 'Segoe UI', Arial, sans-serif;
+  color: #111;
+  background: #fff;
+  margin: 0;
+  line-height: 1.45;
+}
+header.hero {
+  background: linear-gradient(135deg, var(--navy) 0%, var(--cobalt) 55%, var(--blue) 100%);
+  color: #fff;
+  padding: 28px 32px 24px 32px;
+}
+header.hero h1 { margin: 0 0 4px 0; font-size: 30px; font-weight: 700; letter-spacing: -0.3px; }
+header.hero .subtitle { opacity: 0.86; font-size: 14px; }
+.stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 20px; }
+.stat-card {
+  background: rgba(255,255,255,0.10);
+  border-radius: 8px;
+  padding: 12px 16px;
+  border: 1px solid rgba(255,255,255,0.15);
+}
+.stat-card .label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.75; }
+.stat-card .value { font-size: 26px; font-weight: 700; margin-top: 2px; }
+.section { padding: 16px 32px; border-bottom: 1px solid var(--grey-200); }
+.section-title {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--cobalt);
+  font-weight: 700;
+  margin: 0 0 10px 0;
+}
+.chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--grey-100);
+  color: var(--dark-gray);
+  border: 1px solid var(--grey-200);
+  font-size: 13px;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.12s ease-out;
+}
+.chip:hover { background: var(--blue-100); border-color: var(--blue-400); }
+.chip.active {
+  background: var(--blue);
+  color: #fff;
+  border-color: var(--blue);
+  box-shadow: 0 2px 4px rgba(0,119,200,0.35);
+}
+.chip .count {
+  background: rgba(0,0,0,0.10);
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.chip.active .count { background: rgba(255,255,255,0.25); }
+.chip.subcat {
+  background: #fff;
+  border-color: var(--blue-200);
+  font-size: 12px;
+  padding: 5px 10px;
+}
+.chip.subcat.active {
+  background: var(--cobalt);
+  border-color: var(--cobalt);
+}
+.chip.region {
+  background: linear-gradient(135deg, #E7F5F7 0%, #CFEBEE 100%);
+  border-color: var(--teal);
+  color: var(--dark-teal);
+  font-weight: 700;
+  padding: 7px 14px;
+  font-size: 13px;
+}
+.chip.region:hover { background: #B2E0E6; border-color: #076775; }
+.chip.region.active {
+  background: var(--teal);
+  color: #fff;
+  border-color: #076775;
+  box-shadow: 0 2px 6px rgba(16,153,172,0.4);
+}
+.chip.region.active .count { background: rgba(255,255,255,0.28); }
+/* Chips with a count of 0 (no matches under current filter) — muted, still visible */
+.chip.empty {
+  color: var(--grey);
+  border-style: dashed;
+  opacity: 0.65;
+}
+.chip.empty .count { background: rgba(0,0,0,0.05); color: var(--grey); }
+.chip.empty.active {
+  background: var(--grey-100) !important;
+  color: var(--dark-gray) !important;
+  border-style: solid;
+  opacity: 1;
+}
+
+/* Ask bar */
+.ask-bar-section {
+  background: linear-gradient(135deg, #E5F1F9 0%, #F3F4F5 100%);
+  padding: 22px 32px;
+  border-bottom: 1px solid var(--grey-200);
+}
+.ask-inner {
+  max-width: 900px;
+  margin: 0 auto;
+}
+.ask-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--cobalt);
+  margin-bottom: 8px;
+}
+.ask-row {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+}
+.ask-input {
+  flex: 1;
+  padding: 14px 22px;
+  font-size: 15px;
+  border: 2px solid var(--blue-200);
+  border-radius: 999px;
+  font-family: inherit;
+  outline: none;
+  background: #fff;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.ask-input:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 4px rgba(0,119,200,0.15);
+}
+.ask-input::placeholder { color: var(--grey); font-style: italic; }
+.ask-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 28px;
+  background: var(--blue);
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 3px 8px rgba(0,119,200,0.3);
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.ask-btn:hover {
+  background: var(--cobalt);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(11,77,153,0.4);
+}
+.ask-result {
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--dark-gray);
+  min-height: 18px;
+  padding: 0 8px;
+}
+.ask-result b { color: var(--cobalt); }
+.subcat-label {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 9px;
+  font-weight: 700;
+  color: #fff;
+  vertical-align: middle;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-right: 6px;
+}
+.reset-btn {
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--dark-gray);
+  border: 1px solid var(--grey);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.reset-btn:hover { background: var(--grey-100); border-color: var(--dark-gray); }
+.search-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 22px;
+  border-radius: 999px;
+  background: var(--blue);
+  color: #fff;
+  border: none;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 3px 8px rgba(0,119,200,0.35);
+  transition: all 0.15s;
+  font-family: inherit;
+}
+.search-btn:hover { background: var(--cobalt); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(11,77,153,0.4); }
+.search-btn-count {
+  background: rgba(255,255,255,0.25);
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  min-width: 28px;
+  text-align: center;
+}
+.main-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 24px; padding: 20px 32px; }
+@media (max-width: 1000px) { .main-grid { grid-template-columns: 1fr; } }
+.panel {
+  background: #fff;
+  border: 1px solid var(--grey-200);
+  border-radius: 10px;
+  padding: 16px 18px;
+  box-shadow: 0 1px 3px rgba(19,30,88,0.06);
+}
+.panel h2 {
+  margin: 0 0 12px 0;
+  font-size: 15px;
+  color: var(--navy);
+  font-weight: 700;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.panel h2 .hint { font-size: 11px; color: var(--grey); font-weight: 400; text-transform: none; }
+
+/* Map */
+.map-wrap {
+  position: relative;
+  background:
+    radial-gradient(ellipse at 50% 50%, rgba(30, 60, 130, 0.5) 0%, transparent 70%),
+    linear-gradient(180deg, #0d1e42 0%, #060a1c 100%);
+  border-radius: 12px;
+  overflow: hidden;
+  padding: 0;
+  box-shadow: inset 0 0 30px rgba(0,0,0,0.4);
+}
+.map-svg { width: 100%; height: 480px; display: block; }
+.map-grid { stroke: rgba(255,255,255,0.04); stroke-width: 0.25; fill: none; }
+.map-land {
+  fill: url(#landGradient);
+  stroke: rgba(150, 200, 255, 0.35);
+  stroke-width: 0.2;
+  filter: url(#landShadow);
+}
+.map-bubble {
+  stroke: rgba(255,255,255,0.85);
+  stroke-width: 0.4;
+  cursor: pointer;
+  transition: r 0.3s cubic-bezier(0.4, 0, 0.2, 1), fill 0.15s;
+  filter: url(#bubbleGlow);
+}
+.map-bubble.selected {
+  stroke: var(--yellow);
+  stroke-width: 1.2;
+}
+.map-bubble:hover { fill: var(--yellow) !important; }
+.map-country-label {
+  fill: #fff;
+  opacity: 0.85;
+  font-size: 3.2px;
+  text-anchor: middle;
+  pointer-events: none;
+  font-family: Calibri, Arial, sans-serif;
+  paint-order: stroke;
+  stroke: rgba(0,10,30,0.85);
+  stroke-width: 0.5;
+  font-weight: 600;
+}
+.map-tooltip {
+  position: absolute;
+  padding: 6px 10px;
+  background: #fff;
+  color: var(--navy);
+  border: 1px solid var(--blue);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.08s;
+  z-index: 5;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+.map-tooltip .sub { font-weight: 400; color: var(--grey); font-size: 11px; }
+.map-global-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: var(--yellow);
+  color: #111;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 2px solid transparent;
+}
+.map-global-badge.active { border-color: #fff; box-shadow: 0 0 0 3px var(--yellow); }
+.map-legend {
+  position: absolute;
+  bottom: 10px;
+  left: 12px;
+  color: rgba(255,255,255,0.8);
+  font-size: 11px;
+  background: rgba(0,0,0,0.35);
+  padding: 6px 10px;
+  border-radius: 6px;
+  line-height: 1.4;
+}
+.map-legend .lg-dot {
+  display: inline-block;
+  vertical-align: middle;
+  border-radius: 50%;
+  background: var(--blue);
+  margin-right: 4px;
+  border: 1px solid rgba(255,255,255,0.5);
+}
+
+/* Chart panel */
+.chart-wrap { position: relative; height: 460px; }
+
+/* Table */
+.table-section { padding: 20px 32px 40px 32px; }
+.table-controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.search-input {
+  flex: 1;
+  min-width: 240px;
+  padding: 8px 14px;
+  border: 1px solid var(--grey-200);
+  border-radius: 999px;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+}
+.search-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-200); }
+.result-summary { font-size: 13px; color: var(--grey); }
+.vendor-table {
+  width: 100%;
+  min-width: 1565px;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-size: 13px;
+  background: #fff;
+  border: 1px solid var(--grey-200);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.table-section {
+  overflow-x: auto;
+}
+.vendor-table td { word-wrap: break-word; overflow-wrap: break-word; }
+.vendor-about { line-height: 1.5; font-size: 12.5px; color: var(--dark-gray); }
+.vendor-table thead {
+  background: var(--blue);
+  color: #fff;
+}
+.vendor-table th {
+  padding: 12px 10px;
+  text-align: left;
+  font-weight: 700;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  border-bottom: 2px solid var(--cobalt);
+}
+.vendor-table th:hover { background: var(--cobalt); }
+.vendor-table th .sort-arrow { opacity: 0.6; margin-left: 4px; font-size: 11px; }
+.vendor-table th.sorted { background: var(--cobalt); }
+.vendor-table th.sorted .sort-arrow { opacity: 1; }
+.vendor-table tbody tr { border-bottom: 1px solid var(--grey-200); vertical-align: top; }
+.vendor-table tbody tr:nth-child(even) { background: var(--grey-100); }
+.vendor-table tbody tr:hover { background: var(--blue-100); }
+.vendor-table td { padding: 10px; font-size: 13px; }
+.vendor-name { font-weight: 700; color: var(--navy); }
+.confidence-pill { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+.confidence-pill.High   { background: var(--high-bg); color: var(--high-fg); }
+.confidence-pill.Medium { background: var(--med-bg);  color: var(--med-fg); }
+.confidence-pill.Low    { background: var(--low-bg);  color: var(--low-fg); }
+.svc-group {
+  display: block;
+  padding: 4px 0 4px 10px;
+  border-left: 3px solid var(--grey-200);
+  margin-bottom: 6px;
+  line-height: 1.4;
+}
+.svc-cat-name {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--grey);
+  margin-bottom: 2px;
+}
+.svc-subs {
+  font-size: 12.5px;
+  color: var(--dark-gray);
+}
+.svc-sub-item {
+  display: inline;
+}
+.svc-sub-item::after {
+  content: " · ";
+  color: var(--grey);
+  margin: 0 2px;
+}
+.svc-sub-item:last-child::after {
+  content: "";
+}
+.juris-tag {
+  display: inline-block;
+  padding: 1px 8px;
+  margin: 1px 2px 1px 0;
+  background: var(--yellow-100);
+  color: #7a5100;
+  border-radius: 4px;
+  font-size: 11px;
+  border: 1px solid #f5dcaa;
+}
+.website-link { color: var(--blue); text-decoration: none; font-weight: 600; }
+.website-link:hover { text-decoration: underline; }
+.no-results { text-align: center; padding: 40px; color: var(--grey); font-style: italic; }
+
+/* Coverage gap heatmap */
+.gap-scroll-wrap {
+  overflow-x: auto;
+  overflow-y: hidden;
+  border: 1px solid var(--grey-200);
+  border-radius: 8px;
+  background: #fff;
+}
+.gap-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+  font-size: 12px;
+}
+.gap-table th, .gap-table td { padding: 0; box-sizing: border-box; }
+/* Country header row */
+.gap-table th.gap-country-h {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  height: 110px;
+  width: 38px;
+  min-width: 38px;
+  max-width: 38px;
+  vertical-align: bottom;
+  font-weight: 700;
+  color: var(--navy);
+  font-size: 10.5px;
+  padding: 6px 0 6px 0;
+  white-space: nowrap;
+  text-align: center;
+  border-bottom: 1px solid var(--grey-200);
+}
+.gap-table th.gap-country-h .country-count {
+  color: var(--grey);
+  font-weight: 400;
+  font-size: 9.5px;
+}
+/* Category name column — sticky left, clean typography */
+.gap-table th.gap-corner,
+.gap-table td.gap-cat-name {
+  width: 230px;
+  min-width: 230px;
+  max-width: 230px;
+  position: sticky;
+  left: 0;
+  background: #fff;
+  z-index: 3;
+  text-align: left;
+  border-right: 2px solid var(--grey-200);
+}
+.gap-table th.gap-corner { height: 110px; vertical-align: bottom; padding: 6px 12px; }
+.gap-table td.gap-cat-name {
+  height: 40px;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--grey-100);
+  border-left: 5px solid var(--grey-200);
+  padding: 6px 12px 6px 12px;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--navy);
+  background: #fff;
+}
+/* Override the svc-cat-label pill inside the gap table — we want just clean text */
+.gap-table td.gap-cat-name .svc-cat-label {
+  background: none !important;
+  color: inherit !important;
+  padding: 0 !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+}
+/* Cell wrapper td */
+.gap-table td.gap-cell-td {
+  width: 38px;
+  min-width: 38px;
+  max-width: 38px;
+  height: 40px;
+  text-align: center;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--grey-100);
+}
+.gap-cell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 12px;
+  color: #fff;
+  transition: transform 0.12s;
+}
+.gap-cell:hover { transform: scale(1.15); z-index: 2; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+.gap-cell.c0 { background: #FFC7CE; color: #9C0006; }
+.gap-cell.c1 { background: #FFEB9C; color: #9C6500; }
+.gap-cell.c2 { background: #99C9E9; color: #0B4D99; }
+.gap-cell.c3 { background: #0077C8; color: #fff; }
+.gap-cell.c4 { background: #0B4D99; color: #fff; }
+.gap-cell.c5 { background: #131E58; color: #fff; }
+footer.legal {
+  text-align: center;
+  padding: 20px;
+  font-size: 11px;
+  color: var(--grey);
+  border-top: 1px solid var(--grey-200);
+}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <h1>Third-Party Network <span style="font-size: 12px; opacity: 0.7; font-weight: normal; margin-left: 8px;">v4.0</span></h1>
+  <div class="subtitle">SS&amp;C ecosystem of complementary referral partners — internal use only</div>
+  <div class="stats-row">
+    <div class="stat-card"><div class="label">Vendors (total)</div><div class="value" id="stat-vendors">–</div></div>
+    <div class="stat-card"><div class="label">Service categories</div><div class="value" id="stat-cats">–</div></div>
+    <div class="stat-card"><div class="label">Countries covered</div><div class="value" id="stat-countries">–</div></div>
+    <div class="stat-card"><div class="label">Matching filter</div><div class="value" id="stat-filtered">–</div></div>
+  </div>
+</header>
+
+<section class="ask-bar-section">
+  <div class="ask-inner">
+    <label for="ask-input" class="ask-label">Ask</label>
+    <div class="ask-row">
+      <input id="ask-input" type="text" class="ask-input"
+             placeholder='Try: "Corporate Services in Ireland", "AIFMD in Luxembourg", "APAC advisory"' />
+      <button id="ask-btn" class="ask-btn">
+        <span style="font-size: 16px;">🔍</span>
+        <span>Ask</span>
+      </button>
+    </div>
+    <div id="ask-result" class="ask-result"></div>
+  </div>
+</section>
+
+<section class="section">
+  <h3 class="section-title">Filter by service category</h3>
+  <div class="chip-row" id="cat-chips"></div>
+</section>
+
+<section class="section" id="subcat-section" style="display: none;">
+  <h3 class="section-title">Narrow to specific service <span style="opacity: 0.6; font-weight: normal; margin-left: 4px;">(sub-category)</span></h3>
+  <div class="chip-row" id="subcat-chips"></div>
+</section>
+
+<section class="section">
+  <h3 class="section-title">Filter by region <span style="opacity: 0.6; font-weight: normal; margin-left: 4px;">(narrows the jurisdictions below)</span></h3>
+  <div class="chip-row" id="region-chips"></div>
+</section>
+
+<section class="section">
+  <h3 class="section-title">Filter by jurisdiction</h3>
+  <div class="chip-row" id="country-chips"></div>
+</section>
+
+<section style="padding: 16px 32px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+  <button class="search-btn" id="search-btn">
+    <span style="font-size: 15px;">🔍</span>
+    <span>Show matching vendors</span>
+    <span class="search-btn-count" id="search-btn-count">0</span>
+  </button>
+  <button class="reset-btn" id="reset-btn">↻ Reset all filters</button>
+</section>
+
+<div style="padding: 12px 32px; display: flex; justify-content: flex-end;">
+  <button id="global-badge" title="Click to filter to globally-active vendors" style="border:none; background:var(--yellow); color:#111; padding:6px 14px; border-radius:999px; font-size:12px; font-weight:700; cursor:pointer;">
+    Include Global vendors × <span id="global-count">0</span>
+  </button>
+</div>
+<!-- Category bar chart hidden per user request; keep canvas mounted for backwards compatibility -->
+<div style="display:none;"><canvas id="cat-chart"></canvas></div>
+
+<section class="table-section">
+  <h3 class="section-title">Matching vendors</h3>
+  <div class="table-controls">
+    <input type="text" id="search-input" class="search-input" placeholder="Search vendor name, description, HQ..." />
+    <div class="result-summary" id="result-summary">Showing 0 vendors</div>
+  </div>
+  <table class="vendor-table" id="vendor-table">
+    <colgroup>
+      <col style="width: 130px;">
+      <col style="width: 110px;">
+      <col style="width: 95px;">
+      <col style="width: 140px;">
+      <col style="width: 70px;">
+      <col style="width: 340px;">
+      <col style="width: 180px;">
+      <col style="width: 500px;">
+    </colgroup>
+    <thead>
+      <tr>
+        <th data-sort="name">Vendor <span class="sort-arrow">↕</span></th>
+        <th data-sort="hq">HQ <span class="sort-arrow">↕</span></th>
+        <th data-sort="confidence">Confidence <span class="sort-arrow">↕</span></th>
+        <th data-sort="orgType">Type <span class="sort-arrow">↕</span></th>
+        <th>Site</th>
+        <th>Services</th>
+        <th>Jurisdictions</th>
+        <th>About</th>
+      </tr>
+    </thead>
+    <tbody id="vendor-tbody"></tbody>
+  </table>
+</section>
+
+<section class="section" style="padding: 24px 32px 40px 32px; background: linear-gradient(180deg, var(--grey-100) 0%, #fff 100%);">
+  <h3 class="section-title">Coverage gaps <span style="opacity: 0.6; font-weight: normal; text-transform: none; letter-spacing: 0;">— service × jurisdiction with thin partner coverage</span></h3>
+  <p style="font-size: 13px; color: var(--dark-gray); margin: 0 0 16px 0; max-width: 900px;">
+    Rows = service category · columns = jurisdictions with at least one SS&amp;C partner.
+    <span style="background:#FFC7CE; color:#9C0006; padding:1px 6px; border-radius:3px; font-weight:600;">0</span>
+    = no partner (blind spot).
+    <span style="background:#FFEB9C; color:#9C6500; padding:1px 6px; border-radius:3px; font-weight:600;">1</span>
+    = single point of failure. Click any cell to filter the table to those vendors.
+  </p>
+  <div id="gap-heatmap"></div>
+</section>
+
+<footer class="legal">
+  SS&amp;C Third-Party Network Dashboard — snapshot from the master workbook. Internal use only.
+</footer>
+
+<script>
+// -------------------- Data --------------------
+const DATA = {"vendors": [{"name": "Acclime", "website": "https://www.acclime.com", "about": "Acclime is a Hong Kong-headquartered corporate services and business-expansion specialist. Founded in 2019, it's grown through 30+ acquisitions into a ~$1bn valuation firm with 1,700-2,000 professionals serving 17,000+ clients. Covers 17 Asia-Pacific and Middle East jurisdictions on-shore, plus 15 offshore centres (Cayman, BVI, Mauritius, Malta and more). Consultative model rather than SaaS/EOR \u2014 dedicated in-country teams, bespoke pricing.", "hq": "Hong Kong", "orgType": "Corporate Services", "status": "Active", "confidence": "High", "services": [["Advisory & Consulting", "ESG & sustainability"], ["Advisory & Consulting", "Fund formation & setup"], ["Advisory & Consulting", "Investigations & forensics"], ["Advisory & Consulting", "M&A & transactions"], ["Advisory & Consulting", "Restructuring & insolvency"], ["Advisory & Consulting", "Strategic & management consulting"], ["Audit & Accounting", "Bookkeeping & accounting"], ["Corporate Services", "Company secretarial"], ["Corporate Services", "Directorship services"], ["Corporate Services", "Incorporation & formation"], ["Corporate Services", "Registered office & agent"], ["Corporate Services", "Trust & fiduciary services"], ["Fund Administration", "Fund accounting & NAV"], ["Fund Administration", "Middle office & trade processing"], ["HR & Talent", "HR consulting"], ["HR & Talent", "Immigration & relocation"], ["HR & Talent", "PEO & employer of record"], ["HR & Talent", "Payroll processing"], ["HR & Talent", "Recruitment & executive search"], ["Legal Services", "Corporate & commercial law"], ["Tax Services", "Corporate tax compliance"], ["Tax Services", "Tax advisory"]], "juris": ["Hong Kong", "Singapore", "China", "Vietnam", "Thailand", "Malaysia", "Indonesia", "Philippines", "Australia", "India", "Japan", "Cambodia", "Macau", "New Zealand", "South Korea", "Taiwan", "Anguilla", "Bahamas", "Belize", "Virgin Islands (British)", "Cayman Islands", "Cyprus", "Malta", "Mauritius", "United Kingdom", "Switzerland", "United States of America", "Seychelles"]}, {"name": "Agile", "website": "https://agilesolutions.co.uk/", "about": "Note: 'Agile' spans several distinct firms under the same brand. The most likely SS&C referral touchpoint is Agile Legal (US-based Alternative Legal Service Provider): fund formation, LP/LLC drafting, PPMs, Reg D/A Tier 2 support, Blue-Sky compliance across all 50 states, AML/KYC drafting and Rule 506(c) verification. Also under the brand: Agile Partnering (US Employer of Record with embedded payroll funding for staffing firms) and Agile Fund Solutions (outsourced CFO/COO/CCO for alternative managers, acquired by E78 Partners in 2021 \u2014 combined entity administers $30bn+ AUM across 125+ managers).", "hq": "United States of America", "orgType": "Technology Consulting", "status": "Active", "confidence": "Medium", "services": [["Advisory & Consulting", "Fund formation & setup"], ["Advisory & Consulting", "Strategic & management consulting"], ["Fund Administration", "Fund accounting & NAV"], ["HR & Talent", "PEO & employer of record"], ["HR & Talent", "Payroll processing"], ["Legal Services", "Corporate & commercial law"], ["Legal Services", "Funds law"], ["Regulatory & Compliance", "AML, KYC & CDD"], ["Regulatory & Compliance", "Compliance monitoring & assurance"], ["Technology & Data", "Data & analytics"], ["Technology & Data", "IT advisory & implementation"]], "juris": ["United Kingdom", "United States of America"]}, {"name": "Alpha Group", "website": "https://www.alphagroup.com/", "about": "Alpha Group International is a UK-headquartered FTSE 250 FX and alternative-banking specialist, founded 2009. Delivers corporate FX risk management, multi-currency accounts, fund finance and Cobase treasury tech to mid-market corporates and alternative investment institutions. \u00a3220.9m revenue in 2024. Being acquired by US-listed Corpay for ~$2.2bn (pending regulatory approvals). Operates from 11 offices; UK/Malta/Australia-regulated as an Electronic Money Institution.", "hq": "United Kingdom", "orgType": "FX & Payments", "status": "Active", "confidence": "High", "services": [["Advisory & Consulting", "Risk advisory"], ["Advisory & Consulting", "Strategic & management consulting"], ["Banking & Treasury", "Cash management & liquidity"], ["Banking & Treasury", "FX & currency services"], ["Technology & Data", "Fund technology & portfolio systems"]], "juris": ["United Kingdom", "United States of America", "Netherlands", "Spain", "Italy", "Malta", "Australia", "Canada"]}, {"name": "Aspida", "website": "https://www.aspidagroup.com", "about": "Aspida Group is an owner-managed Governance, Risk and Compliance outsourcing firm founded 2001, primarily operating from Guernsey and Malta with reach into Jersey, Isle of Man and the UK. Provides outsourced MLRO/MLCO/CO/NO roles, board performance reviews (first CGI-accredited firm in the UK/Ireland), enterprise risk assessments and cyber resilience (ISO 27001/SOC 2 support). Proprietary GRC technology suite: Resolver by Aspida (GRC SaaS), KYCMatic (AML automation) and RegIntel (AI regulatory intelligence).", "hq": "Guernsey", "orgType": "Corporate Services", "status": "Active", "confidence": "High", "services": [["Advisory & Consulting", "ESG & sustainability"], ["Advisory & Consulting", "Risk advisory"], ["Advisory & Consulting", "Strategic & management consulting"], ["Corporate Services", "Company secretarial"], ["Corporate Services", "Directorship services"], ["Corporate Services", "Incorporation & formation"], ["Corporate Services", "Statutory filings & annual returns"], ["Corporate Services", "Trust & fiduciary services"], ["Fund Administration", "Fund accounting & NAV"], ["HR & Talent", "Payroll processing"], ["HR & Talent", "Training & development"], ["Regulatory & Compliance", "AML, KYC & CDD"], ["Regulatory & Compliance", "Compliance monitoring & assurance"], ["Regulatory & Compliance", "MLRO & outsourced compliance officer"], ["Regulatory & Compliance", "Regulatory reporting (firm-level)"], ["Tax Services", "FATCA & CRS (AEoI)"], ["Technology & Data", "Cybersecurity & InfoSec"], ["Technology & Data", "RegTech & compliance software"]], "juris": ["Malta", "Gibraltar", "Guernsey", "Jersey", "Isle of Man", "United Kingdom"]}, {"name": "AssetMetrix", "website": "https://www.asset-metrix.com/", "about": "AssetMetrix is a Munich-headquartered technology and service provider for private capital markets \u2014 private equity, venture capital, infrastructure and real estate. Spin-off from a fund-of-funds manager. Its platform processes 20 million data points daily. Runs CSSF-regulated Luxembourg infrastructure, with offices in Paris and London. ISO 27001 and SOC 2 certified. UN PRI signatory since 2020. Serves GPs, LPs and asset managers.", "hq": "Germany", "orgType": "Private Markets Tech", "status": "Active", "confidence": "High", "services": [["Advisory & Consulting", "ESG & sustainability"], ["Fund Administration", "Financial statements & audit support"], ["Fund Administration", "Fund accounting & NAV"], ["Fund Administration", "Investor services & transfer agency"], ["Technology & Data", "Data & analytics"], ["Technology & Data", "Fund technology & portfolio systems"]], "juris": ["Germany", "Luxembourg", "United Kingdom", "France"]}, {"name": "Auxadi", "website": "https://www.auxadi.com", "about": "Auxadi is a Madrid-headquartered BPO firm founded 1979, specialising in accounting, tax, payroll and corporate legal services for multinationals, real estate funds and infrastructure asset managers. Direct presence in 50+ jurisdictions through 26 wholly-owned subsidiaries. Serves 1,300-1,500 clients; files 26,000+ tax returns annually. Recent acquisitions of Transfer Pricing Specialists and Gentile Law extend transfer-pricing and legal capability. Proprietary Microsoft-powered MultiCountry platform.", "hq": "Spain", "orgType": "Accounting Outsourcing", "status": "Active", "confidence": "High", "services": [["Advisory & Consulting", "M&A & transactions"], ["Audit & Accounting", "Bookkeeping & accounting"], ["Audit & Accounting", "Payroll"], ["Corporate Services", "Company secretarial"], ["Corporate Services", "Directorship services"], ["Corporate Services", "Domiciliation"], ["Corporate Services", "Incorporation & formation"], ["Corporate Services", "Registered office & agent"], ["Corporate Services", "Statutory filings & annual returns"], ["Fund Administration", "Financial statements & audit support"], ["Fund Administration", "Fund accounting & NAV"], ["Fund Administration", "Investor services & transfer agency"], ["Fund Administration", "Middle office & trade processing"], ["HR & Talent", "HR consulting"], ["HR & Talent", "Payroll processing"], ["Legal Services", "Corporate & commercial law"], ["Regulatory & Compliance", "MLRO & outsourced compliance officer"], ["Regulatory & Compliance", "Regulatory reporting (firm-level)"], ["Tax Services", "Corporate tax compliance"], ["Tax Services", "FATCA & CRS (AEoI)"], ["Tax Services", "Tax advisory"], ["Tax Services", "Transfer pricing"]], "juris": ["Spain", "United States of America", "United Kingdom", "Netherlands", "Global", "Paraguay"]}, {"name": "Baker Tilly", "website": "https://www.bakertilly.com/", "about": "Baker Tilly is a global network of independent accounting and advisory firms operating in 145+ territories with ~36,000 professionals and ~$3.8bn combined revenue. Ranks among the top 15 global networks. Services span audit and assurance (including SOC 1/2 for fintechs and Agreed-Upon Procedures), tax structuring, IT advisory and cyber, and corporate advisory. Note: the US arm was fined $500k by the PCAOB in January 2025 for quality-control deficiencies \u2014 worth flagging on public-company audit mandates.", "hq": "United States of America", "orgType": "Professional Services Network", "status": "Active", "confidence": "High", "services": [["Advisory & Consulting", "Fund formation & setup"], ["Advisory & Consulting", "M&A & transactions"], ["Advisory & Consulting", "Risk advisory"], ["Advisory & Consulting", "Strategic & management consulting"], ["Audit & Accounting", "Statutory audit"], ["Banking & Treasury", "Corporate banking"], ["Corporate Services", "Company secretarial"], ["Corporate Services", "Statutory filings & annual returns"], ["Fund Administration", "Fund accounting & NAV"], ["HR & Talent", "HR consulting"], ["Legal Services", "Corporate & commercial law"], ["Private Wealth", "Family office services"], ["Private Wealth", "Philanthropy structuring"], ["Private Wealth", "Wealth administration"], ["Regulatory & Compliance", "Compliance monitoring & assurance"], ["Regulatory & Compliance", "Regulatory reporting (firm-level)"], ["Tax Services", "Corporate tax compliance"], ["Tax Services", "Tax advisory"], ["Technology & Data", "Cybersecurity & InfoSec"], ["Technology & Data", "Fund technology & portfolio systems"], ["Technology & Data", "IT advisory & implementation"], ["Technology & Data", "RegTech & compliance software"]], "juris": ["Global", "Netherlands", "Australia", "Canada"]}, {"name": "Bank Clarity", "website": "https://bankclarity.com/", "about": "BankClarity is a Jersey-based fintech providing a multi-bank platform for corporate service providers and fiduciaries. It aggregates client bank accounts across institutions into a single portal, streamlining payments, reconciliation and reporting. Widely used by offshore trust and fund administrators.", "hq": "Jersey", "orgType": "Banking Technology", "status": "Active", "confidence": "High", "services": [["Advisory & Consulting", "Strategic & management consulting"], ["Banking & Treasury", "Cash management & liquidity"], ["Banking & Treasury", "Corporate banking"], ["Fund Administration", "Middle office & trade processing"], ["Legal Services", "Corporate & commercial law"], ["Technology & Data", "Fund technology & portfolio systems"], ["Technology & Data", "IT advisory & implementation"], ["Technology & Data", "RegTech & compliance software"]], "juris": ["Jersey", "United Kingdom", "Guernsey"]}, {"name": "Bank Frick", "website": "https://www.bankfrick.li/", "about": "Bank Frick is a Liechtenstein-based private and investment bank owned by the Kuno Frick Family Foundation. It serves institutional intermediaries, funds and fintechs, with a notable niche in regulated digital-asset custody and blockchain banking. Also offers fund administration and lending.", "hq": "Liechtenstein", "orgType": "Private & Investment Bank", "status": "Active", "confidence": "High", "services": [["Banking & Treasury", "Corporate banking"], ["Banking & Treasury", "FX & currency services"], ["Banking & Treasury", "Fund & SPV banking"], ["Banking & Treasury", "Private banking"], ["Fund Administration", "Fund accounting & NAV"]], "juris": ["Liechtenstein", "United Kingdom"]}, {"name": "Barclays", "website": "https://www.barclays.com/", "about": "Barclays is a UK-headquartered universal bank. Its investment bank, corporate bank and private bank between them cover cash management, FX, securities services, fund banking and capital markets, with global reach across the UK, EU, US and Asia. Retail and Wealth arms serve UK and select international clients.", "hq": "United Kingdom", "orgType": "Global Bank", "status": "Active", "confidence": "High", "services": [["Banking & Treasury", "Cash management & liquidity"], ["Banking & Treasury", "Corporate banking"], ["Banking & Treasury", "FX & currency services"], ["Banking & Treasury", "Fund & SPV banking"], ["Banking & Treasury", "Private banking"]], "juris": ["Global"]}, {"name": "BDO", "website": "https://www.bdo.global/en-gb/home", "about": "BDO is the world's fifth-largest audit, tax and advisory network, headquartered in Zaventem, Belgium. Founded 1963 as Binder Seidman International Group. ~90,000+ personnel across 860+ offices in 164+ countries. Combined revenue ~$11-12.8bn. Services: Audit & Assurance (including IPO readiness and ESG reporting), Tax (compliance and transfer pricing), Advisory (M&A, capital raising, cyber, forensic), and Business Services & Outsourcing (payroll, statutory compliance).", "hq": "Belgium", "orgType": "Professional Services Network", "status": "Active", "confidence": "High", "services": [["Advisory & Consulting", "ESG & sustainability"], ["Advisory & Consulting", "Investigations & forensics"], ["Advisory & Consulting", "M&A & transactions"], ["Advisory & Consulting", "Risk advisory"], ["Advisory & Consulting", "Strategic & management consulting"], ["Audit & Accounting", "Bookkeeping & accounting"], ["Audit & Accounting", "Payroll"], ["Audit & Accounting", "Statutory audit"], ["Corporate Services", "Company secretarial"], ["Corporate Services", "Incorporation & formation"], ["Corporate Services", "Statutory filings & annual returns"], ["Fund Administration", "Financial statements & audit support"], ["Fund Administration", "Fund accounting & NAV"], ["HR & Talent", "HR consulting"], ["HR & Talent", "Immigration & relocation"], ["HR & Talent", "Payroll processing"], ["HR & Talent", "Recruitment & executive search"], ["HR & Talent", "Training & development"], ["Tax Services", "Corporate tax compliance"], ["Tax Services", "Tax advisory"], ["Tax Services", "Transfer pricing"], ["Technology & Data", "Cybersecurity & InfoSec"], ["Technology & Data", "IT advisory & implementation"]], "juris": ["Global", "Australia", "Canada", "China", "Hong Kong", "Germany", "Austria", "France", "Egypt", "Jordan", "Kuwait", "Saudi Arabia", "United Arab Emirates"]}, {"name": "Canopy Consulting", "website": "https://www.canopy.ky", "about": "Canopy Consulting is a Cayman Islands-based boutique compliance, governance and financial advisory firm serving CIMA-regulated fund and corporate entities. Core practice: bespoke banking and compliance frameworks, Customer Due Diligence and client onboarding, AML gap analyses and remediation programmes, and forensic-grade due diligence audits (staffed with Certified Fraud Examiners and forensic accountants). Also provides Deputy AML Officer services, Accredited Director appointments, Notary Public services and formal corporate/fund liquidations.", "hq": "Cayman Islands", "orgType": "Advisory", "status": "Active", "confidence": "High", "services": [["Advisory & Consulting", "Investigations & forensics"], ["Advisory & Consulting", "Restructuring & insolvency"], ["Corporate Services", "Directorship services"], ["Corporate Services", "Statutory filings & annual returns"], ["Legal Services", "Corporate & commercial law"], ["Regulatory & Compliance", "AML, KYC & CDD"], ["Regulatory & Compliance", "Compliance monitoring & assurance"], ["Regulatory & Compliance", "MLRO & outsourced compliance officer"]], "juris": ["Cayman Islands"]}, {"name": "Carne Group", "website": "https://www.carnegroup.com/", "about": "Carne Group is Europe's largest third-party management company, providing AIFMD/UCITS ManCo services, independent directorships and regulatory oversight to the global asset management industry. Ireland-headquartered with hubs in Luxembourg, Jersey and six other financial centres. Its Curator platform administers $1trn+ AUM; the CORR platform automates risk and reporting. 650+ employees; serves funds distributed in 160+ jurisdictions. SEC-registered as an Exempt Reporting Adviser.", "hq": "Ireland", "orgType": "Fund Management Solutions", "status": "Active", "confidence": "High", "services": [["Corporate Services", "Company secretarial"], ["Corporate Services", "Directorship services"], ["Corporate Services", "Incorporation & formation"], ["Corporate Services", "Statutory filings & annual returns"], ["Fund Administration", "Fund accounting & NAV"], ["Regulatory & Compliance", "AIFMD & ManCo services"], ["Regulatory & Compliance", "AML, KYC & CDD"], ["Regulatory & Compliance", "Compliance monitoring & assurance"], ["Regulatory & Compliance", "MLRO & outsourced compliance officer"], ["Regulatory & Compliance", "Regulatory reporting (firm-level)"], ["Technology & Data", "RegTech & compliance software"]], "juris": ["Ireland", "Luxembourg", "United Kingdom", "Cayman Islands", "Jersey", "Guernsey", "United States of America"]}, {"name": "CMS", "website": "https://cms.law/en/gbr/", "about": "CMS is a top-tier polycentric international law firm operating through integrated member offices in ~45 countries. Full-service coverage: corporate and M&A, dispute resolution (including international arbitration), real estate and infrastructure, IP and employment law. Deep UK presence across England and Scotland; dedicated EU Law Office in Brussels; also operates in Albania and Chile. Widely used for cross-border M&A, IPO/prospectus work and offshore-cross-border structuring.", "hq": "United Kingdom", "orgType": "Law Firm", "status": "Active", "confidence": "High", "services": [["Advisory & Consulting", "ESG & sustainability"], ["Advisory & Consulting", "Fund formation & setup"], ["Advisory & Consulting", "M&A & transactions"], ["Advisory & Consulting", "Strategic & management consulting"], ["Banking & Treasury", "Corporate banking"], ["Corporate Services", "Company secretarial"], ["Fund Administration", "Fund accounting & NAV"], ["Legal Services", "Corporate & commercial law"], ["Legal Services", "Dispute resolution"], ["Legal Services", "Employment law"], ["Legal Services", "Financial services regulation"], ["Legal Services", "Funds law"], ["Legal Services", "Real estate law"], ["Private Wealth", "Wealth administration"], ["Regulatory & Compliance", "Compliance monitoring & assurance"], ["Regulatory & Compliance", "Regulatory reporting (firm-level)"], ["Tax Services", "Tax advisory"]], "juris": ["Global", "Belgium", "Albania", "Chile"]}, {"name": "ComplyCraft", "website": "https://www.complycraftconsulting.com", "about": "ComplyCraft Consulting is a UK-based FCA compliance consultancy founded by former regulators. Manages FCA authorisations (with mock regulator interviews), and international licensing for MAS (Singapore), SFC (Hong Kong), DFSA (Dubai), VARA (UAE) and EU regulators. Specialist prudential services: ICARA drafting, wind-down plans, Annex IV reporting for AIFMD sub-threshold managers, plus MIFIDPRU/IFPR, COREP, FINREP, FATCA and DORA. On the APCC's Additional Skilled Persons list across six regulatory lots \u2014 supports firms facing FCA Section 166 reviews.", "hq": "United Kingdom", "orgType": "RegTech", "status": "Active", "confidence": "High", "services": [["Advisory & Consulting", "Restructuring & insolvency"], ["Advisory & Consulting", "Risk advisory"], ["Corporate Services", "Incorporation & formation"], ["Corporate Services", "Statutory filings & annual returns"], ["Fund Administration", "Fund accounting & NAV"], ["HR & Talent", "Training & development"], ["Legal Services", "Corporate & commercial law"], ["Regulatory & Compliance", "AIFMD & ManCo services"], ["Regulatory & Compliance", "AML, KYC & CDD"], ["Regulatory & Compliance", "Compliance monitoring & assurance"], ["Regulatory & Compliance", "Licence applications & authorisations"], ["Regulatory & Compliance", "MLRO & outsourced compliance officer"], ["Regulatory & Compliance", "Regulatory reporting (firm-level)"], ["Tax Services", "FATCA & CRS (AEoI)"], ["Technology & Data", "IT advisory & implementation"]], "juris": ["United Kingdom", "Singapore", "Hong Kong", "United Arab Emirates", "European Union"]}, {"name": "ComplyPort", "website": "https://complyport.com/", "about": "Complyport is a UK-headquartered regulatory compliance consultancy with 25+ years' experience, flagship brand of the ComplyMAP Group. Delivered 1,500+ FCA/EU/UAE authorisations; supports 1,000+ firms on ongoing compliance. Appointed to the FCA/PRA Skilled Persons' Panel across eight specialist lots. Offices in London, Cyprus, UAE, India and Mauritius, with associates in Australia, Singapore, NZ, US and Hong Kong. Proprietary RegTech: ComplyPortal, ViCA (AI) and MAP FinTech transaction reporting integration.", "hq": "United Kingdom", "orgType": "Regulatory Compliance", "status": "Active", "confidence": "High", "services": [["Advisory & Consulting", "Risk advisory"], ["Advisory & Consulting", "Strategic & management consulting"], ["Corporate Services", "Company secretarial"], ["Corporate Services", "Statutory filings & annual returns"], ["HR & Talent", "Training & development"], ["Legal Services", "Corporate & commercial law"], ["Regulatory & Compliance", "Compliance monitoring & assurance"], ["Regulatory & Compliance", "Licence applications & authorisations"], ["Regulatory & Compliance", "MLRO & outsourced compliance officer"], ["Regulatory & Compliance", "Regulatory reporting (firm-level)"], ["Technology & Data", "Cybersecurity & InfoSec"], ["Technology & Data", "IT advisory & implementation"], ["Technology & Data", "RegTech & compliance software"]], "juris": ["United Kingdom", "Ireland", "Cyprus", "United Arab Emirates", "India", "Mauritius", "Australia", "Singapore", "New Zealand", "United States of America", "Hong Kong"]}, {"name": "Connectaverse", "website": "", "about": "The Connectaverse is an online marketplace connecting businesses with vetted local service providers for international expansion \u2014 legal, accounting, HR and corporate services. Useful for early-stage referral when SS&C doesn't have a direct partner in-country; less relevant for regulated fund workstreams. Small platform still building critical mass.", "hq": "", "orgType": "Business Marketplace", "status": "Active", "confidence": "Low", "services": [["Advisory & Consulting", "ESG & sustainability"], ["Advisory & Consulting", "Strategic & management consulting"], ["Banking & Treasury", "Corporate banking"], ["Corporate Services", "Company secretarial"], ["Corporate Services", "Incorporation & formation"], ["Corporate Services", "Statutory filings & annual returns"], ["Fund Administration", "Financial statements & audit support"], ["Fund Administration", "Fund accounting & NAV"], ["HR & Talent", "HR consulting"], ["HR & Talent", "Immigration & relocation"], ["HR & Talent", "Payroll processing"], ["Legal Services", "Corporate & commercial law"], ["Regulatory & Compliance", "Regulatory reporting (firm-level)"], ["Tax Services", "Corporate tax compliance"], ["Tax Services", "FATCA & CRS (AEoI)"]], "juris": ["Global"]}, {"name": "Cushman & Wakefield", "website": "https://www.cushmanwakefield.com/", "about": "Cushman & Wakefield is a Chicago-headquartered global commercial real estate services firm, founded 1917 in New York. $9.49bn revenue (2023), ~51,000 personnel, ~400 offices across 60-70 countries. Services: agency leasing and tenant representation, capital markets (including sale-leaseback and debt financing), investment management via DTZ Investors, independent valuation and advisory, and global occupier and facility services. Manages full lifecycle of commercial real estate for institutional investors and multinational occupiers.", "hq": "United States of America", "orgType": "Real Estate Services", "status": "Active", "confidence": "High", "services": [["Advisory & Consulting", "Valuation"], ["Real Estate", "Commercial property services"], ["Real Estate", "Property management"], ["Real Estate", "Property valuation"]], "juris": ["Global"]}, {"name": "Deloitte", "website": "https://www.deloitte.com/", "about": "Deloitte is the world's largest professional services network by revenue and headcount, operating as a Swiss Verein (Deloitte Touche Tohmatsu Limited) with independent member firms in 150+ countries. Services span audit and assurance (increasingly algorithmic and full-population), consulting (Monitor Deloitte for strategy, Deloitte Digital for tech), risk advisory (cyber, regulatory), financial advisory (M&A, forensic, restructuring), and tax and legal. Regional consortiums cover EMEA, Asia Pacific and the Americas.", "hq": "United Kingdom", "orgType": "Big Four", "status": "Active", "confidence": "High", "services": [["Advisory & Consulting", "ESG & sustainability"], ["Advisory & Consulting", "Fund formation & setup"], ["Advisory & Consulting", "Investigations & forensics"], ["Advisory & Consulting", "M&A & transactions"], ["Advisory & Consulting", "Risk advisory"], ["Advisory & Consulting", "Strategic & management consulting"], ["Audit & Accounting", "Bookkeeping & accounting"], ["Audit & Accounting", "Statutory audit"], ["Corporate Services", "Company secretarial"], ["Corporate Services", "Incorporation & formation"], ["Corporate Services", "Statutory filings & annual returns"], ["Corporate Services", "Trust & fiduciary services"], ["Fund Administration", "Financial statements & audit support"], ["Fund Administration", "Fund accounting & NAV"], ["Fund Administration", "Investor services & transfer agency"], ["Fund Administration", "Middle office & trade processing"], ["HR & Talent", "HR consulting"], ["HR & Talent", "Immigration & relocation"], ["HR & Talent", "Payroll processing"], ["HR & Talent", "Recruitment & executive search"], ["HR & Talent", "Training & development"], ["Legal Services", "Corporate & commercial law"], ["Private Wealth", "Family office services"], ["Private Wealth", "Philanthropy structuring"], ["Private Wealth", "Wealth administration"], ["Regulatory & Compliance", "AML, KYC & CDD"], ["Regulatory & Compliance", "Compliance monitoring & assurance"], ["Regulatory & Compliance", "Regulatory reporting (firm-level)"], ["Tax Services", "Corporate tax compliance"], ["Tax Services", "FATCA & CRS (AEoI)"], ["Tax Services", "International tax structuring"], ["Tax Services", "Tax advisory"], ["Technology & Data", "Cybersecurity & InfoSec"], ["Technology & Data", "Fund technology & portfolio systems"], ["Technology & Data", "IT advisory & implementation"], ["Technology & Data", "RegTech & compliance software"]], "juris": ["Global"]}, {"name": "Ebury", "website": "https://ebury.com/", "about": "Ebury is a London-headquartered fintech offering international payments, FX risk management and business lending to SMEs and mid-market corporates. Majority-owned by Santander since 2019, giving stronger institutional backing than typical fintechs. Notable for tailored FX hedging over 130+ currencies.", "hq": "United Kingdom", "orgType": "FX & Payments", "status": "Active", "confidence": "High", "services": [["Banking & Treasury", "Cash management & liquidity"], ["Banking & Treasury", "FX & currency services"]], "juris": ["United Kingdom", "Netherlands", "Spain", "United States of America", "Canada", "Australia"]}, {"name": "EisnerAmper", "website": "https://www.eisneramper.com/", "about": "EisnerAmper is a top-20 US accounting and advisory firm with a strategic focus on alternative investment funds, middle-market corporates and high-net-worth clients. Ranks fifth-largest auditor of global private funds. Deep US presence (California, NY, Boston, Florida, Texas), plus offshore hubs in Cayman Islands, Luxembourg (CSSF-regulated), Ireland and Singapore. Global reach through Allinial Global member-firm network. Notable for private-fund audit, cross-border tax structuring and non-resident-alien tax advisory.", "hq": "United States of America", "orgType": "Professional Services Network", "status": "Active", "confidence": "High", "services": [["Advisory & Consulting", "Fund formation & setup"], ["Advisory & Consulting", "M&A & transactions"], ["Advisory & Consulting", "Restructuring & insolvency"], ["Advisory & Consulting", "Risk advisory"], ["Advisory & Consulting", "Strategic & management consulting"], ["Audit & Accounting", "Bookkeeping & accounting"], ["Audit & Accounting", "Statutory audit"], ["Corporate Services", "Statutory filings & annual returns"], ["Fund Administration", "Fund accounting & NAV"], ["HR & Talent", "HR consulting"], ["Legal Services", "Corporate & commercial law"], ["Private Wealth", "Estate & succession planning"], ["Private Wealth", "Family office services"], ["Private Wealth", "Wealth administration"], ["Regulatory & Compliance", "Compliance monitoring & assurance"], ["Tax Services", "Corporate tax compliance"], ["Tax Services", "Tax advisory"], ["Technology & Data", "Cybersecurity & InfoSec"], ["Technology & Data", "IT advisory & implementation"]], "juris": ["United States of America", "United Kingdom", "Ireland", "Cayman Islands", "India", "Israel", "Singapore"]}, {"name": "EQ", "website": "https://equiniti.com/uk/", "about": "Equiniti (EQ) is the UK's largest share registrar and technology-driven capital-markets administrator, headquartered in West Sussex. Services around 50% of the FTSE 100 and a significant share of the S&P 500. Manages 70M+ shareholder records, processes ~\u00a390bn in payments annually and ~\u00a315bn in pension payments. 5,000+ employees across 26 locations; distributes to shareholders in up to 180 countries. Services: share registration, IPO execution, employee share plans, pension administration and corporate governance advisory.", "hq": "United Kingdom", "orgType": "Share Registrar", "status": "Active", "confidence": "High", "services": [["Advisory & Consulting", "Fund formation & setup"], ["Advisory & Consulting", "Risk advisory"], ["Advisory & Consulting", "Strategic & management consulting"], ["Banking & Treasury", "Escrow & paying agent"], ["Banking & Treasury", "FX & currency services"], ["Corporate Services", "Company secretarial"], ["Corporate Services", "Incorporation & formation"], ["Corporate Services", "Statutory filings & annual returns"], ["HR & Talent", "HR consulting"], ["HR & Talent", "Payroll processing"], ["HR & Talent", "Training & development"], ["Legal Services", "Corporate & commercial law"], ["Private Wealth", "Philanthropy structuring"], ["Regulatory & Compliance", "AML, KYC & CDD"], ["Regulatory & Compliance", "Compliance monitoring & assurance"], ["Regulatory & Compliance", "Regulatory reporting (firm-level)"], ["Technology & Data", "IT advisory & implementation"], ["Technology & Data", "RegTech & compliance software"]], "juris": ["United Kingdom", "United States of America", "India"]}, {"name": "EY", "website": "https://www.ey.com/en_gl", "about": "EY (Ernst & Young) is one of the Big Four global professional services networks, operating through a federated model of national member firms in 140+ countries with ~144,000 professionals. Services span assurance (increasingly data-driven), tax (transfer pricing, cross-border structuring), consulting (enterprise transformation, cyber), and Strategy & Transactions (M&A, restructuring). Deep integration across financial services, particularly funds, wealth management and financial services regulation.", "hq": "United Kingdom", "orgType": "Big Four", "status": "Active", "confidence": "High", "services": [["Advisory & Consulting", "ESG & sustainability"], ["Advisory & Consulting", "M&A & transactions"], ["Advisory & Consulting", "Restructuring & insolvency"], ["Advisory & Consulting", "Risk advisory"], ["Advisory & Consulting", "Strategic & management consulting"], ["Advisory & Consulting", "Valuation"], ["Audit & Accounting", "Statutory audit"], ["Fund Administration", "Fund accounting & NAV"], ["HR & Talent", "HR consulting"], ["Legal Services", "Corporate & commercial law"], ["Tax Services", "Corporate tax compliance"], ["Tax Services", "Tax advisory"], ["Tax Services", "Transfer pricing"], ["Technology & Data", "Cybersecurity & InfoSec"], ["Technology & Data", "IT advisory & implementation"], ["Technology & Data", "RegTech & compliance software"]], "juris": ["Global"]}, {"name": "FE Fundinfo Nordics", "website": "https://www.fefundinfo.com/", "about": "FE fundinfo is a fund data, analytics and regulatory reporting provider headquartered in London. Its Nordic operation covers Swedish, Danish, Norwegian and Finnish fund distribution. Automates PRIIPs KID generation and SFDR sustainability disclosures. Proprietary FE Analytics platform delivers quantitative fund performance tracking, risk mapping and peer benchmarking for asset managers, IFAs, discretionary wealth managers and retail distributors. Integrates Nordic fund data with wider continental Europe and UK distribution networks.", "hq": "United Kingdom", "orgType": "Fund Data", "status": "Active", "confidence": "High", "services": [["Advisory & Consulting", "ESG & sustainability"], ["Advisory & Consulting", "Risk advisory"], ["Advisory & Consulting", "Strategic & management consulting"], ["Banking & Treasury", "Corporate banking"], ["Corporate Services", "Statutory filings & annual returns"], ["Fund Administration", "Fund accounting & NAV"], ["Regulatory & Compliance", "Regulatory reporting (firm-level)"], ["Tax Services", "Corporate tax compliance"], ["Tax Services", "Tax advisory"], ["Technology & Data", "Data & analytics"], ["Technology & Data", "IT advisory & implementation"], ["Technology & Data", "RegTech & compliance software"]], "juris": ["United Kingdom", "Nordics", "Global"]}, {"name": "Fiduchi", "website": "https://fiduchi.com/", "about": "Fiduchi is a Jersey-headquartered independent provider of corporate, trust and alternative fund administration services, regulated by the Jersey Financial Services Commission. Specialises in SPVs, complex family wealth structures (including Jersey Property Unit Trusts for UK real estate), independent directorships, corporate secretarial, registered office and trustee services for discretionary trusts and foundations. Focus on cross-border high-net-worth clients and family offices needing offshore structuring.", "hq": "Jersey", "orgType": "Fiduciary", "status": "Active", "confidence": "High", "services": [["Advisory & Consulting", "ESG & sustainability"], ["Advisory & Consulting", "Fund formation & setup"], ["Corporate Services", "Company secretarial"], ["Corporate Services", "Directorship services"], ["Corporate Services", "Incorporation & formation"], ["Corporate Services", "Registered office & agent"], ["Corporate Services", "Trust & fiduciary services"], ["Fund Administration", "Fund accounting & NAV"], ["HR & Talent", "Payroll processing"], ["Legal Services", "Corporate & commercial law"], ["Private Wealth", "Estate & succession planning"], ["Private Wealth", "Family office services"], ["Private Wealth", "Trust services (private)"], ["Regulatory & Compliance", "AML, KYC & CDD"]], "juris": ["Jersey", "United Kingdom"]}, {"name": "FlagStone", "website": "https://www.flagstoneim.com/", "about": "Flagstone is a UK-based cash deposit platform giving clients access to hundreds of savings and deposit accounts across 65+ banking institutions through a single application. FCA-regulated. Uses API-driven architecture to allow dynamic rate optimisation and automatic FSCS coverage maximisation via algorithmic deposit fragmentation across independent banking licences. Target clients: high-net-worth individuals, family offices, SMEs, charities and institutional wealth managers.", "hq": "United Kingdom", "orgType": "Deposit Platform", "status": "Active", "confidence": "High", "services": [["Banking & Treasury", "Cash management & liquidity"], ["Banking & Treasury", "Corporate banking"], ["Corporate Services", "Company secretarial"], ["Corporate Services", "Statutory filings & annual returns"], ["Technology & Data", "Fund technology & portfolio systems"]], "juris": ["United Kingdom"]}, {"name": "Freedom Asset Management", "website": "https://freedomasset.com/", "about": "Freedom Asset Management is the asset-management arm of Freedom Holding Corp, a Nasdaq-listed diversified financial group with roots in Kazakhstan and Central Asia. It runs discretionary portfolios and Eurasian equity strategies. Small counterparty for SS&C clients; more relevant if clients have Central Asian mandates.", "hq": "Kazakhstan", "orgType": "Asset Management", "status": "Active", "confidence": "Low", "services": [["Advisory & Consulting", "Strategic & management consulting"], ["Fund Administration", "Fund accounting & NAV"]], "juris": ["Kazakhstan", "Cyprus"]}, {"name": "FundBank (Lux)", "website": "", "about": "FundBank is a purpose-built alternative-investment bank. Its Luxembourg entity FundBank (Europe) S.A. is a fully licensed credit institution authorised by the ECB and regulated by the CSSF \u2014 passportable across the EU under a single banking licence. Its Cayman operation serves North American and offshore fund structures. Services: subscription/redemption accounts, capital-call bridge financing, real IBAN issuance (no virtual IBANs), SWIFT/FX, tailored credit lines, and 10-business-day digital onboarding. 95% of assets held off-balance-sheet via fiduciary sub-custody. Also delivers custody and transactional escrow.", "hq": "Luxembourg", "orgType": "Fund Banking", "status": "Active", "confidence": "High", "services": [["Banking & Treasury", "Escrow & paying agent"], ["Banking & Treasury", "FX & currency services"], ["Banking & Treasury", "Fund & SPV banking"], ["Corporate Services", "Trust & fiduciary services"], ["Fund Administration", "Depositary services"], ["Regulatory & Compliance", "AML, KYC & CDD"]], "juris": ["Luxembourg", "United States of America", "Cayman Islands", "European Union"]}, {"name": "GCS Advisory", "website": "", "about": "GCS Advisory: limited independent information from this session. Retain internally with a Low confidence flag until further verification \u2014 please confirm activity and geographic scope before quoting in a sales conversation.", "hq": "", "orgType": "Advisory", "status": "Active", "confidence": "Low", "services": [["Advisory & Consulting", "Strategic & management consulting"]], "juris": []}, {"name": "Global Reach", "website": "https://www.corpay.com/cross-border", "about": "Global Reach is a specialised corporate FX and international payments firm now integrated into the Corpay (FLEETCOR) ecosystem following Inflexion Private Equity's exit. Delivers forward contracts (up to 2 years), spot contracts, market orders, multi-currency IBAN accounts, mass/bulk payment processing, and wholesale banknote operations from a high-security Toronto vault. Payment infrastructure covers 140+ currencies across 200+ countries. Offices: London (HQ, FCA-regulated), Toronto, Amsterdam, Madrid, Sydney, Hong Kong, Dubai and South Africa.", "hq": "United Kingdom", "orgType": "FX Services", "status": "Active", "confidence": "High", "services": [["Banking & Treasury", "Cash management & liquidity"], ["Banking & Treasury", "FX & currency services"]], "juris": ["United Kingdom", "Europe", "Canada", "Netherlands", "Spain", "Australia", "Hong Kong", "United Arab Emirates", "South Africa"]}, {"name": "Goldman Sachs", "website": "https://www.goldmansachs.com/", "about": "Goldman Sachs is a global investment banking, securities and asset-management firm. For institutional clients, most relevant for prime brokerage, capital markets, private wealth (via Goldman Sachs Private Wealth) and Marcus retail deposits. UK and EU operations run through London and Frankfurt hubs.", "hq": "United States of America", "orgType": "Investment Bank", "status": "Active", "confidence": "High", "services": [["Banking & Treasury", "Corporate banking"], ["Banking & Treasury", "FX & currency services"], ["Banking & Treasury", "Fund & SPV banking"], ["Banking & Treasury", "Private banking"]], "juris": ["Global"]}, {"name": "Grant Thornton", "website": "https://www.grantthornton.com/", "about": "Grant Thornton is a global multinational professional services network with ~$7.5bn revenue and ~73,000 personnel across 147 markets, coordinated by Grant Thornton International Ltd. Formed a unified multinational advisory platform in January 2025 spanning the Americas, Europe and the Middle East. Services span audit, tax, corporate finance, specialist advisory (cyber, ESG, forensic), recovery and insolvency (heavy Caribbean footprint), and business process solutions. Note: UK arm has faced sustained FRC scrutiny over past public-company audits.", "hq": "United Kingdom", "orgType": "Professional Services Network", "status": "Active", "confidence": "High", "services": [["Advisory & Consulting", "ESG & sustainability"], ["Advisory & Consulting", "Fund formation & setup"], ["Advisory & Consulting", "Investigations & forensics"], ["Advisory & Consulting", "M&A & transactions"], ["Advisory & Consulting", "Restructuring & insolvency"], ["Advisory & Consulting", "Risk advisory"], ["Advisory & Consulting", "Strategic & management consulting"], ["Audit & Accounting", "Bookkeeping & accounting"], ["Audit & Accounting", "Payroll"], ["Audit & Accounting", "Statutory audit"], ["Corporate Services", "Company secretarial"], ["Fund Administration", "Fund accounting & NAV"], ["HR & Talent", "HR consulting"], ["HR & Talent", "Recruitment & executive search"], ["Legal Services", "Corporate & commercial law"], ["Regulatory & Compliance", "Compliance monitoring & assurance"], ["Regulatory & Compliance", "Regulatory reporting (firm-level)"], ["Tax Services", "Corporate tax compliance"], ["Tax Services", "FATCA & CRS (AEoI)"], ["Technology & Data", "Cybersecurity & InfoSec"], ["Technology & Data", "Fund technology & portfolio systems"]], "juris": ["Global"]}, {"name": "Harneys", "website": "https://www.harneys.com", "about": "Harneys is a leading offshore law firm covering BVI, Cayman Islands, Bermuda, Anguilla, Cyprus, Luxembourg and Hong Kong. Widely used for fund formation, corporate structuring, dispute resolution and financial services regulation in offshore centres. Long track record in complex cross-border transactions and offshore funds.", "hq": "Virgin Islands (British)", "orgType": "Offshore Law", "status": "Active", "confidence": "High", "services": [["Legal Services", "Corporate & commercial law"], ["Legal Services", "Dispute resolution"], ["Legal Services", "Financial services regulation"], ["Legal Services", "Funds law"], ["Legal Services", "Offshore law"]], "juris": ["Virgin Islands (British)", "Cayman Islands", "Bermuda", "Anguilla", "Cyprus", "Luxembourg", "Hong Kong", "Singapore"]}, {"name": "Harvey Law Group", "website": "https://harveylawcorporation.com/", "about": "Harvey Law Group is a Hong Kong-headquartered multinational law firm founded 1992 in Montreal by Jean-Fran\u00e7ois Harvey, specialising in investment immigration, global mobility and cross-border business law. 19 offices worldwide. Advises HNWIs on Citizenship by Investment (Caribbean: Antigua, Dominica, Grenada, St Lucia; Vanuatu, Nauru, Egypt, Turkey), Residency by Investment / Golden Visas (Portugal, Greece, Italy, Malta, Spain, Cyprus, Hungary, UAE etc.), US EB-5/EB-2 NIW/E-2, Canada BC PNP and Start-Up Visa, and Citizenship by Ancestry. Also cross-border corporate and IP law. Screens applicants against 3m+ entities for AML/PEP compliance.", "hq": "Hong Kong", "orgType": "Immigration & Investment Law", "status": "Active", "confidence": "High", "services": [["Advisory & Consulting", "M&A & transactions"], ["Advisory & Consulting", "Strategic & management consulting"], ["Corporate Services", "Incorporation & formation"], ["HR & Talent", "Immigration & relocation"], ["Legal Services", "Corporate & commercial law"], ["Legal Services", "Employment law"], ["Legal Services", "Financial services regulation"], ["Private Wealth", "Estate & succession planning"], ["Private Wealth", "Wealth administration"], ["Regulatory & Compliance", "AML, KYC & CDD"], ["Tax Services", "International tax structuring"], ["Tax Services", "Private client & personal tax"]], "juris": ["Hong Kong", "Thailand", "Vietnam", "Cambodia", "Myanmar", "United States of America", "Canada", "France", "Portugal", "United Kingdom", "Turkey", "South Africa", "Grenada", "Dominica", "Antigua and Barbuda", "Saint Lucia", "Malta", "Cyprus", "Greece", "Italy", "Spain", "United Arab Emirates", "Mauritius", "Australia", "New Zealand"]}, {"name": "HazelTree", "website": "https://hazeltree.com", "about": "Hazeltree is a New York-headquartered cloud treasury and liquidity management platform purpose-built for alternative investment managers \u2014 hedge, private equity, real estate and fund administrators. Founded 2009. Platform processes ~$8bn of daily transactions across $4trn+ AUM at 500+ investment firms. Modules: zTreasury, zLiquidity, Margin Replication, zPortFi, Data Insights, Sweeps. SOC 1/2 Type 2, ISAE 3402, ISO 27001/27701. Offices NY, London, Bournemouth, Hong Kong.", "hq": "United States of America", "orgType": "Treasury Technology", "status": "Active", "confidence": "High", "services": [["Banking & Treasury", "Cash management & liquidity"], ["Technology & Data", "Data & analytics"], ["Technology & Data", "Fund technology & portfolio systems"], ["Technology & Data", "IT advisory & implementation"], ["Technology & Data", "RegTech & compliance software"]], "juris": ["United States of America", "United Kingdom", "Hong Kong"]}, {"name": "HB Law", "website": "https://www.hbpubliclaw.co.uk/", "about": "Note: 'HB Law' surfaces three unrelated firms. The one in this workbook is HB Public Law (UK local-government and public law). Two others under the same shorthand exist internationally: Bakouchi & Habachi HB Law Firm LLP in Morocco (corporate/commercial and M&A for inbound investment into Francophone Africa) and HB-Law in Toronto, Ontario (civil litigation, real estate law, mortgage enforcement). If a colleague references 'HB Law' outside a UK public-sector context, verify which entity.", "hq": "United Kingdom", "orgType": "Public Law", "status": "Active", "confidence": "Medium", "services": [["Corporate Services", "Statutory filings & annual returns"], ["Legal Services", "Corporate & commercial law"], ["Legal Services", "Dispute resolution"], ["Legal Services", "Employment law"], ["Tax Services", "Corporate tax compliance"]], "juris": ["United Kingdom"]}, {"name": "Highvern", "website": "https://www.highvern.com", "about": "Highvern is an independent Channel Islands-headquartered fiduciary providing private capital, fund and corporate administration. Roots in Jersey since the 1960s, employee-owned since 2016. Combined with Nordic fund services specialist Permian in mid-2025, adding fully-authorised AIF Depositary services in Norway and Sweden. 300+ professionals across 8 jurisdictions: Jersey (JFSC), Guernsey (GFSC), Isle of Man, Cayman Islands (CIMA), Ireland (CBI), UK (HMRC AML), Norway, Sweden, plus a Cape Town administration hub.", "hq": "Jersey", "orgType": "Fiduciary", "status": "Active", "confidence": "High", "services": [["Corporate Services", "Company secretarial"], ["Corporate Services", "Directorship services"], ["Corporate Services", "Trust & fiduciary services"], ["Fund Administration", "Depositary services"], ["Fund Administration", "Fund accounting & NAV"], ["Fund Administration", "Investor services & transfer agency"], ["Private Wealth", "Estate & succession planning"], ["Private Wealth", "Family office services"], ["Private Wealth", "Trust services (private)"], ["Regulatory & Compliance", "AIFMD & ManCo services"], ["Regulatory & Compliance", "MLRO & outsourced compliance officer"]], "juris": ["Jersey", "Guernsey", "Isle of Man", "United Kingdom", "Cayman Islands", "Ireland", "Norway", "Sweden", "South Africa"]}, {"name": "HSBC", "website": "https://www.hsbc.com/", "about": "HSBC is a UK-headquartered global universal bank with a particularly strong Asia-Pacific franchise. Global Banking & Markets, Wealth and Personal Banking, and Commercial Banking together cover the full range of corporate banking, custody, cash management, FX and private banking. Present in ~60 countries.", "hq": "United Kingdom", "orgType": "Global Bank", "status": "Active", "confidence": "High", "services": [["Banking & Treasury", "Cash management & liquidity"], ["Banking & Treasury", "Corporate banking"], ["Banking & Treasury", "FX & currency services"], ["Banking & Treasury", "Fund & SPV banking"], ["Banking & Treasury", "Private banking"]], "juris": ["Global"]}, {"name": "HSP", "website": "https://www.hsp-ifa.com/", "about": "HSP is a UK independent financial adviser serving mid-market corporates and high-net-worth individuals. Services span retirement planning, investment advice, protection and estate planning. Small regional firm, chartered status.", "hq": "United Kingdom", "orgType": "Financial Planning", "status": "Active", "confidence": "Low", "services": [["Advisory & Consulting", "M&A & transactions"], ["Advisory & Consulting", "Risk advisory"], ["Advisory & Consulting", "Strategic & management consulting"], ["Corporate Services", "Company secretarial"], ["Corporate Services", "Statutory filings & annual returns"], ["HR & Talent", "HR consulting"], ["HR & Talent", "Immigration & relocation"], ["Private Wealth", "Estate & succession planning"], ["Private Wealth", "Wealth administration"], ["Regulatory & Compliance", "Compliance monitoring & assurance"], ["Regulatory & Compliance", "Regulatory reporting (firm-level)"], ["Tax Services", "Corporate tax compliance"], ["Tax Services", "Tax advisory"], ["Technology & Data", "RegTech & compliance software"]], "juris": ["United Kingdom"]}, {"name": "IMG Trusts", "website": "https://imgtrust.ky", "about": "IMG Trust is a Cayman Islands-headquartered founder-led fiduciary for UHNW families and complex private-client structures. Provides professional trustee services, administers Dynasty Trusts and Private Trust Companies, and serves as Protector on family structures. Distinctive contentious-trust practice (cross-border divorce claims, misappropriation defence). Complementary legal arm IMG Law launched 2025. Administers trusts under Jersey, Guernsey, Bermuda and BVI law; director mandates in Switzerland and Bermuda; marketing representation in Monaco and London for European timezone coverage. Niche in luxury asset governance (yachts, aviation) and captive insurance administration.", "hq": "Cayman Islands", "orgType": "Fiduciary", "status": "Active", "confidence": "High", "services": [["Advisory & Consulting", "Strategic & management consulting"], ["Corporate Services", "Company secretarial"], ["Corporate Services", "Directorship services"], ["Corporate Services", "Trust & fiduciary services"], ["Fund Administration", "Fund accounting & NAV"], ["Legal Services", "Corporate & commercial law"], ["Legal Services", "Dispute resolution"], ["Private Wealth", "Estate & succession planning"], ["Private Wealth", "Family office services"], ["Private Wealth", "Philanthropy structuring"], ["Private Wealth", "Trust services (private)"], ["Tax Services", "Corporate tax compliance"]], "juris": ["Cayman Islands", "Jersey", "Guernsey", "Bermuda", "Virgin Islands (British)", "Switzerland", "Monaco", "United Kingdom"]}, {"name": "Intabulis", "website": "https://intabulis.com/", "about": "Intabulis (Intabulis SCSp) is a Luxembourg-only specialist providing independent non-executive directorships to European alternative investment funds. Directors sit on CSSF-approved boards of Specialised Investment Funds (SIFs) and SICARs, plus unregulated vehicles, securitisation structures, funds-of-funds and family offices. Core function is oversight of the investment manager, risk methodology, valuation policies and conflicts management under AIFMD.", "hq": "Luxembourg", "orgType": "Corporate Services", "status": "Active", "confidence": "High", "services": [["Advisory & Consulting", "Strategic & management consulting"], ["Corporate Services", "Company secretarial"], ["Corporate Services", "Directorship services"], ["Corporate Services", "Domiciliation"], ["Corporate Services", "Incorporation & formation"], ["Corporate Services", "Statutory filings & annual returns"], ["Fund Administration", "Fund accounting & NAV"]], "juris": ["Luxembourg"]}, {"name": "Intercontinental Trust", "website": "https://intercontinentaltrust.com", "about": "Intercontinental Trust (ITL) is a Mauritius-headquartered independent provider of fund, corporate, trust and BPO services, founded 1999 and regulated by the Mauritius FSC. Focused on Africa- and India-facing structures using Mauritius's DTA network. Offices: Ebene (HQ), Mah\u00e9 (Seychelles), Singapore, Dubai (added recently), plus representative offices in South Africa and Kenya. Distinctive practices include VASP licensing under Mauritius's VAITOS Act and a KYCP portal for digital assets. ISAE 3402 Type II certified.", "hq": "Mauritius", "orgType": "Fiduciary", "status": "Active", "confidence": "High", "services": [["Advisory & Consulting", "Fund formation & setup"], ["Advisory & Consulting", "M&A & transactions"], ["Advisory & Consulting", "Strategic & management consulting"], ["Corporate Services", "Company secretarial"], ["Corporate Services", "Directorship services"], ["Corporate Services", "Incorporation & formation"], ["Corporate Services", "Registered office & agent"], ["Corporate Services", "Statutory filings & annual returns"], ["Corporate Services", "Trust & fiduciary services"], ["Fund Administration", "Fund accounting & NAV"], ["Fund Administration", "Investor services & transfer agency"], ["HR & Talent", "Immigration & relocation"], ["HR & Talent", "Payroll processing"], ["Legal Services", "Corporate & commercial law"], ["Private Wealth", "Trust services (private)"], ["Regulatory & Compliance", "Licence applications & authorisations"], ["Tax Services", "Corporate tax compliance"], ["Tax Services", "FATCA & CRS (AEoI)"], ["Tax Services", "Tax advisory"]], "juris": ["Mauritius", "Seychelles", "Singapore", "United Arab Emirates", "South Africa", "Kenya"]}, {"name": "Johnston Carmichael", "website": "https://johnstoncarmichael.com/", "about": "Johnston Carmichael is Scotland's largest independent chartered accountancy and business-advisory firm \u2014 11 UK offices (Aberdeen, Dundee, Edinburgh, Elgin, Forfar, Glasgow, Inverness, Inverurie, Stirling, London, Newcastle). Member of Moore Global Network for international reach (563 offices, 116 countries). Deep specialisms in R&D tax incentives, Patent Box, Capital Allowances, VGTR, SEIS/EIS/EMI, VAT, IR35/off-payroll, Consumer Duty implementation, Making Tax Digital, and CASS audit.", "hq": "United Kingdom", "orgType": "Accountancy", "status": "Active", "confidence": "High", "services": [["Advisory & Consulting", "M&A & transactions"], ["Advisory & Consulting", "Restructuring & insolvency"], ["Advisory & Consulting", "Strategic & management consulting"], ["Audit & Accounting", "Payroll"], ["Audit & Accounting", "Statutory audit"], ["HR & Talent", "Payroll processing"], ["Regulatory & Compliance", "Compliance monitoring & assurance"], ["Regulatory & Compliance", "Regulatory reporting (firm-level)"], ["Tax Services", "Corporate tax compliance"], ["Tax Services", "International tax structuring"], ["Tax Services", "Private client & personal tax"], ["Tax Services", "Transfer pricing"], ["Tax Services", "VAT & indirect tax"], ["Technology & Data", "IT advisory & implementation"]], "juris": ["United Kingdom"]}, {"name": "JP Morgan Chase", "website": "https://www.jpmorganchase.com/", "about": "JPMorgan Chase is a US-headquartered global universal bank. Institutional-relevant services span securities services (custody, fund accounting, transfer agency), corporate banking, treasury and payments, and asset & wealth management. Largest US bank by assets. UK/EU operations centralised in London and Dublin.", "hq": "United States of America", "orgType": "Global Bank", "status": "Active", "confidence": "High", "services": [["Banking & Treasury", "Cash management & liquidity"], ["Banking & Treasury", "Corporate banking"], ["Banking & Treasury", "Fund & SPV banking"], ["Fund Administration", "Fund accounting & NAV"], ["Fund Administration", "Investor services & transfer agency"]], "juris": ["Global"]}, {"name": "KPMG", "website": "https://kpmg.com/uk/en/home.html", "about": "KPMG is one of the Big Four professional services networks \u2014 46 member firms across 145 countries with ~275,000+ personnel. KPMG International Limited is a UK private company limited by guarantee (since 2020, previously a Swiss cooperative). Key regional hubs: London, New York, Amsterdam, Frankfurt, Singapore, Hong Kong, Sydney, Tokyo, Dubai, Johannesburg. Notable 2024 UK+Switzerland merger created a $4.4bn integrated audit/tax/advisory entity. Deep in financial-services regulation, fund tax, deal advisory and outsourced compliance.", "hq": "United Kingdom", "orgType": "Big Four", "status": "Active", "confidence": "High", "services": [["Advisory & Consulting", "ESG & sustainability"], ["Advisory & Consulting", "Investigations & forensics"], ["Advisory & Consulting", "M&A & transactions"], ["Advisory & Consulting", "Restructuring & insolvency"], ["Advisory & Consulting", "Risk advisory"], ["Advisory & Consulting", "Strategic & management consulting"], ["Audit & Accounting", "Bookkeeping & accounting"], ["Audit & Accounting", "Statutory audit"], ["Legal Services", "Corporate & commercial law"], ["Regulatory & Compliance", "Compliance monitoring & assurance"], ["Tax Services", "Corporate tax compliance"], ["Tax Services", "International tax structuring"], ["Tax Services", "Tax advisory"], ["Technology & Data", "IT advisory & implementation"], ["Technology & Data", "RegTech & compliance software"]], "juris": ["Global"]}, {"name": "Kroll", "website": "https://www.kroll.com/en", "about": "Kroll is a global provider of risk and financial advisory services \u2014 valuation, restructuring, investigations, cybersecurity, ESG, compliance and secondary-market M&A advisory. London EMEA hub with deep leadership across investigations (financial crime, integrity DD, asset tracing), portfolio valuation, financial services compliance, and enterprise security. Formed from Duff & Phelps' 2022 rebrand. Operates entirely in advisory \u2014 no audit conflict. ~30 countries.", "hq": "United States of America", "orgType": "Risk Advisory", "status": "Active", "confidence": "High", "services": [["Advisory & Consulting", "ESG & sustainability"], ["Advisory & Consulting", "Fund formation & setup"], ["Advisory & Consulting", "Investigations & forensics"], ["Advisory & Consulting", "M&A & transactions"], ["Advisory & Consulting", "Restructuring & insolvency"], ["Advisory & Consulting", "Risk advisory"], ["Advisory & Consulting", "Strategic & management consulting"], ["Advisory & Consulting", "Valuation"], ["Corporate Services", "Trust & fiduciary services"], ["Tax Services", "Corporate tax compliance"], ["Tax Services", "Transfer pricing"], ["Technology & Data", "Cybersecurity & InfoSec"], ["Technology & Data", "RegTech & compliance software"]], "juris": ["Global"]}, {"name": "Ledgen", "website": "https://ledgengroup.com/en/", "about": "Ledgen Group is a Singapore-headquartered corporate services firm founded 2003 (private-equity backed since 2019), providing the operational backbone for MNCs, SMEs and startups establishing regional presence in ASEAN. Six verticals: outsourced accounting, tax advisory (GST/IRAS), HR & Payroll, corporate secretarial (ACRA filings), business incorporation and Shared Service Centre operations. Specialises in Employment Pass, Work Pass and Dependent Pass applications. Direct offices in Singapore, Petaling Jaya (Malaysia) and Kowloon (Hong Kong), plus a regional affiliate network.", "hq": "Singapore", "orgType": "Fund Administration", "status": "Active", "confidence": "High", "services": [["Audit & Accounting", "Bookkeeping & accounting"], ["Corporate Services", "Company secretarial"], ["Corporate Services", "Directorship services"], ["Corporate Services", "Incorporation & formation"], ["Corporate Services", "Registered office & agent"], ["Fund Administration", "Fund accounting & NAV"], ["Fund Administration", "Investor services & transfer agency"], ["HR & Talent", "HR consulting"], ["HR & Talent", "Immigration & relocation"], ["HR & Talent", "Payroll processing"], ["Legal Services", "Corporate & commercial law"], ["Regulatory & Compliance", "AIFMD & ManCo services"], ["Regulatory & Compliance", "Regulatory reporting (firm-level)"], ["Tax Services", "Corporate tax compliance"]], "juris": ["Luxembourg", "Singapore", "Malaysia", "Hong Kong"]}, {"name": "Lemanik", "website": "https://www.lemanikgroup.com/", "about": "Lemanik is a Luxembourg-headquartered independent asset servicing group and third-party ManCo, with Swiss roots. Manages ~\u20ac30bn across 250 sub-funds for 70+ asset managers under UCITS and AIFMD frameworks. 80+ professionals across Luxembourg, Dublin, Hong Kong, Milan and Lugano. Beyond regulatory hosting, also operates as an independent investment boutique with distribution muscle in the Swiss wealth-management market. Turnkey EU distribution gateway for non-EU managers.", "hq": "Luxembourg", "orgType": "Asset Servicing", "status": "Active", "confidence": "High", "services": [["Corporate Services", "Directorship services"], ["Corporate Services", "Domiciliation"], ["Fund Administration", "Fund accounting & NAV"], ["Fund Administration", "Investor services & transfer agency"], ["Private Wealth", "Wealth administration"], ["Regulatory & Compliance", "AIFMD & ManCo services"]], "juris": ["Luxembourg", "Switzerland", "Ireland", "Italy", "United Kingdom", "Hong Kong"]}, {"name": "LK Shields", "website": "https://www.lkshields.ie/", "about": "LK Shields merged with Byrne Wallace LLP on 1 January 2025 to form Byrne Wallace Shields LLP \u2014 one of Ireland's largest full-service law firms. Deep commercial practice: corporate/M&A, banking & finance (syndicated lending, real estate finance), investment funds, life sciences, EU legislation and international-trade advisory, IP/technology, litigation and dispute resolution, insolvency and restructuring (including Irish examinership). Offices in Dublin (HQ), Galway and London (strategic UK/Ireland cross-border presence).", "hq": "Ireland", "orgType": "Law Firm", "status": "Active", "confidence": "High", "services": [["Advisory & Consulting", "ESG & sustainability"], ["Advisory & Consulting", "M&A & transactions"], ["Advisory & Consulting", "Restructuring & insolvency"], ["Advisory & Consulting", "Strategic & management consulting"], ["Banking & Treasury", "Corporate banking"], ["Corporate Services", "Company secretarial"], ["Corporate Services", "Incorporation & formation"], ["Corporate Services", "Statutory filings & annual returns"], ["Fund Administration", "Fund accounting & NAV"], ["HR & Talent", "HR consulting"], ["Legal Services", "Corporate & commercial law"], ["Legal Services", "Dispute resolution"], ["Legal Services", "Employment law"], ["Legal Services", "Financial services regulation"], ["Legal Services", "Funds law"], ["Legal Services", "Real estate law"], ["Real Estate", "Commercial property services"], ["Regulatory & Compliance", "Compliance monitoring & assurance"], ["Regulatory & Compliance", "Regulatory reporting (firm-level)"], ["Technology & Data", "IT advisory & implementation"], ["Technology & Data", "RegTech & compliance software"]], "juris": ["Ireland", "United Kingdom"]}, {"name": "Lloyds", "website": "https://www.lloydsbank.com/", "about": "Lloyds Banking Group is one of the UK's largest domestic banks. Retail Banking, Commercial Banking and Insurance & Wealth arms cover retail, corporate and mid-market services. Limited international footprint outside the UK. Relevant for UK cash management, working capital and commercial banking mandates.", "hq": "United Kingdom", "orgType": "UK Bank", "status": "Active", "confidence": "High", "services": [["Banking & Treasury", "Cash management & liquidity"], ["Banking & Treasury", "Corporate banking"], ["Banking & Treasury", "FX & currency services"], ["Banking & Treasury", "Private banking"]], "juris": ["United Kingdom"]}, {"name": "LPO", "website": "www.lposolutions.com", "about": "LPO Solutions (Sri Lanka) is a Legal Process Outsourcing provider leveraging the Bar Association of Sri Lanka's 20,000+ registered attorneys, many holding UK LLB qualifications and common-law grounding. Serves clients across Australia, the UK, Singapore and the US. Services: document review, e-discovery, contract management, legal research, transcription, corporate secretarial, cross-border M&A support, nearshoring, international private/corporate investigations, IP support (patent research, prior-art searches, drafting) and AI-assisted contract analysis.", "hq": "Sri Lanka", "orgType": "BPO Solutions", "status": "Active", "confidence": "High", "services": [["Advisory & Consulting", "Investigations & forensics"], ["Advisory & Consulting", "M&A & transactions"], ["Audit & Accounting", "Bookkeeping & accounting"], ["Corporate Services", "Company secretarial"], ["Corporate Services", "Incorporation & formation"], ["HR & Talent", "HR consulting"], ["Legal Services", "Corporate & commercial law"], ["Legal Services", "Dispute resolution"], ["Regulatory & Compliance", "Regulatory reporting (firm-level)"]], "juris": ["Sri Lanka", "United States of America", "Australia", "United Kingdom", "Singapore"]}, {"name": "MAP FinTech", "website": "https://mapfintech.com/", "about": "MAP FinTech is a Cyprus-headquartered RegTech specialist founded 2013, serving 200+ systemic banks, investment firms and brokers globally. Its Polaris cloud platform fully automates trade reporting across EMIR/EMIR REFIT, MiFID II/MiFIR, SFTR, DAC6, FATCA/CRS, ASIC, MAS and CSA \u2014 plus best-execution monitoring, MAR trade surveillance, AML transaction monitoring and eKYC. Offices London (HQ), Nicosia, Limassol. Algorithms tested by EU National Competent Authorities; supports clients through regulatory audits.", "hq": "Cyprus", "orgType": "RegTech", "status": "Active", "confidence": "High", "services": [["Legal Services", "Corporate & commercial law"], ["Regulatory & Compliance", "AML, KYC & CDD"], ["Regulatory & Compliance", "Compliance monitoring & assurance"], ["Regulatory & Compliance", "Regulatory reporting (firm-level)"], ["Tax Services", "FATCA & CRS (AEoI)"], ["Technology & Data", "IT advisory & implementation"], ["Technology & Data", "RegTech & compliance software"]], "juris": ["Cyprus", "United Kingdom", "European Union", "Australia", "Singapore", "Canada"]}, {"name": "Marfire", "website": "https://marfire.co/", "about": "Marfire: limited independent information from this session. Retain internally with a Low confidence flag until further verification \u2014 please confirm scope of activity before quoting in a sales conversation.", "hq": "United Kingdom", "orgType": "Consultancy", "status": "Active", "confidence": "Low", "services": [["Advisory & Consulting", "Strategic & management consulting"], ["Corporate Services", "Directorship services"], ["Legal Services", "Corporate & commercial law"], ["Regulatory & Compliance", "Compliance monitoring & assurance"]], "juris": ["United Kingdom"]}, {"name": "MONEX", "website": "https://www.monexeurope.com/", "about": "Monex Group is a Mexican-controlled global commercial FX and cross-border payments specialist, founded 1985. Services 70,000+ clients, handles ~$303bn in deliverable FX and $11.1bn in assets annually via a 24/7 payment platform across 130+ currencies. 2,800+ employees. Built through acquisitions: Monex USA (Washington DC with NY/Chicago/Miami/Beverly Hills), Monex Canada (Toronto/Vancouver), Monex Europe (London), Monex Europa (Spain, post-Brexit EU entity), MonFX (Singapore, MAS-authorised). Focus: SME and mid-corporate FX abandoned by de-risking banks.", "hq": "Mexico", "orgType": "FX Services", "status": "Active", "confidence": "High", "services": [["Advisory & Consulting", "Risk advisory"], ["Banking & Treasury", "Cash management & liquidity"], ["Banking & Treasury", "Corporate banking"], ["Banking & Treasury", "FX & currency services"], ["Corporate Services", "Company secretarial"], ["Technology & Data", "RegTech & compliance software"]], "juris": ["United Kingdom", "Spain", "Netherlands", "Ireland", "Mexico", "Canada", "United States of America", "Singapore"]}, {"name": "Morgan Stanley", "website": "https://www.morganstanley.com/", "about": "Morgan Stanley is a US-headquartered global investment banking, securities and asset management firm. Institutional-relevant services span prime brokerage, capital markets, wealth management and investment management. UK/EU business run through London hub. Notable in prime services for hedge funds.", "hq": "United States of America", "orgType": "Investment Bank", "status": "Active", "confidence": "High", "services": [["Banking & Treasury", "Corporate banking"], ["Banking & Treasury", "Fund & SPV banking"], ["Banking & Treasury", "Private banking"]], "juris": ["Global"]}, {"name": "MUFG", "website": "https://www.mufg.jp/", "about": "MUFG (Mitsubishi UFJ Financial Group) is Japan's largest bank and one of the world's biggest by assets. For fund and Corporate Services clients, most relevant for fund banking, custody, corporate lending and trust services \u2014 particularly for Japanese-domiciled or Japan-facing structures. London hub for European coverage.", "hq": "Japan", "orgType": "Global Bank", "status": "Active", "confidence": "High", "services": [["Banking & Treasury", "Corporate banking"], ["Banking & Treasury", "Fund & SPV banking"], ["Corporate Services", "Trust & fiduciary services"]], "juris": ["Global"]}, {"name": "NatWest", "website": "https://www.natwest.com/", "about": "NatWest Group (formerly RBS) is one of the UK's four largest domestic banks. Retail, commercial, private banking (Coutts) and corporate/institutional segments cover the full range of UK banking needs. Predominantly UK-focused with limited international presence.", "hq": "United Kingdom", "orgType": "UK Bank", "status": "Active", "confidence": "High", "services": [["Banking & Treasury", "Cash management & liquidity"], ["Banking & Treasury", "Corporate banking"], ["Banking & Treasury", "FX & currency services"], ["Banking & Treasury", "Private banking"]], "juris": ["United Kingdom"]}, {"name": "NorthPeak Advisory", "website": "https://www.northpeakadvisory.com", "about": "NorthPeak Advisory is a London-headquartered ESG and Responsible Investment specialist for alternative asset managers, founded 2019. Full lifecycle: pre-deal M&A due diligence (red-flag screening, post-close 100-day plans), RI policy design and PRI reporting, TCFD/ISSB climate scenario analysis and SBTi decarbonisation pathways, SFDR Article 8/9 classification and PAI data workflows, EDCI reporting, LP DDQ responses, biodiversity measurement and modern-slavery supply-chain audits. Recognised in Verdantix reports for SFDR/CSRD readiness consulting. Primarily UK and EU-focused, but frameworks applied globally across portfolios.", "hq": "United Kingdom", "orgType": "Regulatory Advisory", "status": "Active", "confidence": "High", "services": [["Advisory & Consulting", "ESG & sustainability"], ["Advisory & Consulting", "Investigations & forensics"], ["Advisory & Consulting", "M&A & transactions"], ["HR & Talent", "Training & development"], ["Regulatory & Compliance", "AML, KYC & CDD"], ["Regulatory & Compliance", "Compliance monitoring & assurance"], ["Regulatory & Compliance", "Licence applications & authorisations"], ["Regulatory & Compliance", "MLRO & outsourced compliance officer"], ["Regulatory & Compliance", "Regulatory reporting (firm-level)"]], "juris": ["United Kingdom", "European Union"]}, {"name": "Oak Group", "website": "https://www.oak.group/", "about": "Oak Group is a Guernsey-headquartered fiduciary formed in 2019 from the consolidation of Oak Trust Group, Consortia and Kreston IOM, backed by the Financial Services Opportunities Investment Fund. ~160 professionals across Guernsey, Jersey, Isle of Man, Malta, Mauritius, Switzerland, UAE, and the Bahamas (via 2025 Amber Trust acquisition). Director-led approach to private capital, family trusts, wealth succession, superyacht ownership and real estate fund administration (via Oakbridge).", "hq": "Guernsey", "orgType": "Fiduciary", "status": "Active", "confidence": "High", "services": [["Advisory & Consulting", "Fund formation & setup"], ["Advisory & Consulting", "Strategic & management consulting"], ["Corporate Services", "Company secretarial"], ["Corporate Services", "Directorship services"], ["Corporate Services", "Incorporation & formation"], ["Corporate Services", "Registered office & agent"], ["Corporate Services", "Statutory filings & annual returns"], ["Corporate Services", "Trust & fiduciary services"], ["Fund Administration", "Financial statements & audit support"], ["Fund Administration", "Fund accounting & NAV"], ["Fund Administration", "Investor services & transfer agency"], ["Fund Administration", "Middle office & trade processing"], ["Legal Services", "Corporate & commercial law"], ["Private Wealth", "Family office services"], ["Private Wealth", "Philanthropy structuring"], ["Private Wealth", "Wealth administration"], ["Real Estate", "Commercial property services"], ["Real Estate", "Property valuation"], ["Regulatory & Compliance", "AML, KYC & CDD"], ["Regulatory & Compliance", "Compliance monitoring & assurance"], ["Regulatory & Compliance", "MLRO & outsourced compliance officer"], ["Tax Services", "Corporate tax compliance"], ["Tax Services", "FATCA & CRS (AEoI)"]], "juris": ["Jersey", "Guernsey", "Isle of Man", "Malta", "Mauritius", "Switzerland", "United Arab Emirates", "Bahamas"]}, {"name": "Old National Bank", "website": "https://www.oldnational.com/", "about": "Old National Bancorp is a US Midwest regional bank based in Indiana with a sophisticated Financial Institutions Group serving hedge funds, private equity, CTAs, CPOs, VCs and RIAs. FIG services: capital-call/subscription-line facilities, subscription/redemption facilities, Deposit Account Control Agreements, SPV accounts, escrow accounts, FX transactions and interest-rate derivatives. Wealth Management arm provides fiduciary corporate trustee, estate planning and 401(k) fiduciary advisory. Community banking, commercial banking and treasury management for Midwest clients across Indiana, Wisconsin, Illinois, Michigan and Kentucky.", "hq": "United States of America", "orgType": "US Bank", "status": "Active", "confidence": "High", "services": [["Banking & Treasury", "Cash management & liquidity"], ["Banking & Treasury", "Corporate banking"], ["Banking & Treasury", "Escrow & paying agent"], ["Banking & Treasury", "FX & currency services"], ["Banking & Treasury", "Fund & SPV banking"], ["Corporate Services", "Trust & fiduciary services"], ["Private Wealth", "Estate & succession planning"], ["Private Wealth", "Wealth administration"]], "juris": ["United States of America"]}, {"name": "ONE Group Solutions", "website": "https://www.one-gs.com/", "about": "ONE Group Solutions: limited independent information from this session. Likely a fund and corporate services provider. Retain internally with a Low confidence flag until further verification.", "hq": "", "orgType": "Fund Services", "status": "Active", "confidence": "Low", "services": [["Corporate Services", "Company secretarial"], ["Corporate Services", "Directorship services"], ["Corporate Services", "Registered office & agent"], ["Corporate Services", "Statutory filings & annual returns"], ["Fund Administration", "Fund accounting & NAV"], ["Legal Services", "Corporate & commercial law"], ["Regulatory & Compliance", "Compliance monitoring & assurance"], ["Technology & Data", "Fund technology & portfolio systems"]], "juris": []}, {"name": "One Investment Group", "website": "https://www.oneinvestment.com.au/", "about": "One Investment Group (OIG) is a Sydney-headquartered independent funds-management business founded 2009, managing $35bn+ across 300+ funds. Multiple AFSL-licensed entities acting as Responsible Entity (registered schemes) or Trustee (wholesale vehicles) under the Australian Corporations Act and ASIC oversight. Full 'One-Stop Shop': scheme registration, PDS/TMD drafting, compliance-plan design and monitoring, ASIC liaison, unitholder complaints handling. Custody via strategic alliance with BNY Mellon. Unity Fund Services (affiliate) delivers fund accounting, valuation and tax reporting; One Registry Services handles unit registry, distributions and AML/CTF compliance.", "hq": "Australia", "orgType": "Fund Services", "status": "Active", "confidence": "High", "services": [["Advisory & Consulting", "Strategic & management consulting"], ["Corporate Services", "Company secretarial"], ["Corporate Services", "Directorship services"], ["Corporate Services", "Statutory filings & annual returns"], ["Corporate Services", "Trust & fiduciary services"], ["Fund Administration", "Fund accounting & NAV"], ["HR & Talent", "HR consulting"], ["Private Wealth", "Family office services"], ["Regulatory & Compliance", "AML, KYC & CDD"], ["Regulatory & Compliance", "Compliance monitoring & assurance"], ["Regulatory & Compliance", "Regulatory reporting (firm-level)"], ["Tax Services", "Corporate tax compliance"]], "juris": ["Cayman Islands"]}, {"name": "Perpetual Limited", "website": "https://www.perpetual.com.au/", "about": "Perpetual Limited (ASX: PPT) is an Australian multi-boutique asset-management, wealth-management and corporate-trust group, founded 1886 in Sydney. Manages A$226.8bn (June 2025). Runs 11 boutique brands \u2014 Pendal, Barrow Hanley, JOHCM, Regnan, Trillium, TSW etc. \u2014 with distinct investment cultures. Corporate Trust arm delivers institutional fiduciary and debt-market administration from Sydney, Singapore, Amsterdam, London, Edinburgh, Dallas, Hong Kong. Transformative $1.7bn Pendal acquisition (2022-23) drove global scale-up.", "hq": "Australia", "orgType": "Trust Services", "status": "Active", "confidence": "High", "services": [["Advisory & Consulting", "ESG & sustainability"], ["Banking & Treasury", "Custody bank"], ["Corporate Services", "Trust & fiduciary services"], ["Fund Administration", "Fund accounting & NAV"], ["Private Wealth", "Family office services"], ["Private Wealth", "Philanthropy structuring"], ["Private Wealth", "Wealth administration"], ["Technology & Data", "IT advisory & implementation"]], "juris": ["Australia", "United States of America", "United Kingdom", "New Zealand", "Singapore", "Netherlands", "Hong Kong"]}, {"name": "PNC", "website": "https://www.pnc.com/", "about": "PNC Financial Services is one of the largest US regional banks, headquartered in Pittsburgh. Corporate, retail and asset management services across ~30 US states. Notable in mid-market corporate banking and treasury services. Total assets ~$560bn.", "hq": "United States of America", "orgType": "US Bank", "status": "Active", "confidence": "High", "services": [["Banking & Treasury", "Cash management & liquidity"], ["Banking & Treasury", "Corporate banking"]], "juris": ["United States of America"]}, {"name": "Propine", "website": "https://propine.com/", "about": "Propine is a Singapore-headquartered independent digital-asset custodian founded 2018, MAS Capital Market Services (CMS) licensed to provide bespoke digital-asset custody. Operates as a Qualified Custodian, keeping client assets strictly off-balance-sheet. ProtectTM omni-asset custody supports security tokens, native crypto, stablecoins, NFTs and fiat, alongside CrypTradeTM for integrated on/off-ramp. Compliance/technical teams across India, Vietnam, Malaysia, Hong Kong, Eastern Europe and Africa. Backed by SGInnovate, Seeds Capital, Woodstock Fund, Wave Financial.", "hq": "Singapore", "orgType": "Digital Asset Custody", "status": "Active", "confidence": "High", "services": [["Banking & Treasury", "Custody bank"], ["Corporate Services", "Trust & fiduciary services"], ["Fund Administration", "Fund accounting & NAV"], ["Technology & Data", "Cybersecurity & InfoSec"], ["Technology & Data", "Fund technology & portfolio systems"]], "juris": ["Singapore", "India", "Vietnam", "Malaysia", "Hong Kong"]}, {"name": "PWC", "website": "https://www.pwc.co.uk/", "about": "PricewaterhouseCoopers (PwC) is one of the Big Four global professional services networks, structured as a cooperative of legally independent member firms under PwC International Limited (HQ 1 Embankment Place, London). 370,000+ professionals across 149 countries. Service lines: Assurance & Audit, Tax Advisory, Consulting & Deals Advisory (including Generative AI implementation), Risk/Forensic/Legal. In the US alone operates from 80+ offices; NY hosts elite financial-services advisory, SF the tech/VC epicentre, Houston/Dallas energy.", "hq": "United Kingdom", "orgType": "Big Four", "status": "Active", "confidence": "High", "services": [["Advisory & Consulting", "ESG & sustainability"], ["Advisory & Consulting", "Investigations & forensics"], ["Advisory & Consulting", "M&A & transactions"], ["Advisory & Consulting", "Restructuring & insolvency"], ["Advisory & Consulting", "Risk advisory"], ["Advisory & Consulting", "Strategic & management consulting"], ["Audit & Accounting", "Statutory audit"], ["Fund Administration", "Fund accounting & NAV"], ["HR & Talent", "HR consulting"], ["Legal Services", "Corporate & commercial law"], ["Private Wealth", "Wealth administration"], ["Regulatory & Compliance", "Compliance monitoring & assurance"], ["Tax Services", "Corporate tax compliance"], ["Tax Services", "International tax structuring"], ["Tax Services", "Tax advisory"], ["Technology & Data", "Cybersecurity & InfoSec"]], "juris": ["Global"]}, {"name": "RBC", "website": "https://www.rbc.com/", "about": "RBC (Royal Bank of Canada) is Canada's largest bank and a top-ten global bank by market cap. Wealth management, capital markets, corporate banking and asset servicing (RBC Investor Services) are relevant institutionally. UK and EU operations run through London and Dublin/Luxembourg hubs.", "hq": "Canada", "orgType": "Global Bank", "status": "Active", "confidence": "High", "services": [["Banking & Treasury", "Corporate banking"], ["Banking & Treasury", "Fund & SPV banking"], ["Banking & Treasury", "Private banking"], ["Fund Administration", "Fund accounting & NAV"]], "juris": ["Global"]}, {"name": "REFRAME Capital", "website": "https://www.reframecapital.com/", "about": "Reframe Capital is a London-based strategic advisory and distribution firm for private-markets managers, plus a distinct private equity arm focused on US Sunbelt lower-middle-market buyouts. Advisory verticals: business and organisational strategy, product structuring (with a specific focus on Irish Investment Limited Partnerships in collaboration with Simmons & Simmons), governance and operational resilience, ESG integration (partnered with Ocorian), and go-to-market planning. Distribution: capital-raising across US, EMEA, APAC and LatAm. Technology stack powered by strategic partnership with LemonEdge (low-code fund accounting platform). Founded by Benjamin Lamping (~20 years' industry experience, $18bn+ raised).", "hq": "United Kingdom", "orgType": "Corporate Finance", "status": "Active", "confidence": "High", "services": [["Advisory & Consulting", "ESG & sustainability"], ["Advisory & Consulting", "Fund formation & setup"], ["Advisory & Consulting", "M&A & transactions"], ["Advisory & Consulting", "Strategic & management consulting"], ["Corporate Services", "Statutory filings & annual returns"], ["Technology & Data", "Fund technology & portfolio systems"]], "juris": ["United Kingdom", "United States of America", "Ireland", "European Union", "Asia Pacific"]}, {"name": "ReThink", "website": "https://rethink-hq.com/", "about": "ReThink is a UAE-based business advisory firm serving SMEs and family offices with company setup, accounting, tax, VAT, HR and compliance. Focus is on inbound investors establishing UAE operations. Boutique scale relative to Big Four in-region but strong local knowledge.", "hq": "United Arab Emirates", "orgType": "Business Advisory", "status": "Active", "confidence": "High", "services": [["Advisory & Consulting", "M&A & transactions"], ["Advisory & Consulting", "Strategic & management consulting"], ["Audit & Accounting", "Bookkeeping & accounting"], ["Corporate Services", "Company secretarial"], ["Corporate Services", "Directorship services"], ["Corporate Services", "Incorporation & formation"], ["Corporate Services", "Statutory filings & annual returns"], ["Fund Administration", "Fund accounting & NAV"], ["HR & Talent", "HR consulting"], ["HR & Talent", "Payroll processing"], ["HR & Talent", "Recruitment & executive search"], ["HR & Talent", "Training & development"], ["Regulatory & Compliance", "MLRO & outsourced compliance officer"], ["Tax Services", "Corporate tax compliance"], ["Tax Services", "Tax advisory"], ["Tax Services", "VAT & indirect tax"], ["Technology & Data", "IT advisory & implementation"]], "juris": ["United Arab Emirates"]}, {"name": "Rikvin", "website": "https://www.rikvin.com", "about": "Rikvin is a Singapore-headquartered corporate services firm and subsidiary of the InCorp Group, based on Robinson Road. 15,000+ clients and 1,000+ group-level professionals. Fully licensed as an employment agency by Singapore's MOM. Services: incorporation and shelf company acquisition, ACRA filing, nominee directors, corporate tax and GST compliance, transfer pricing, work-pass procurement (EP, EntrePass, Tech.Pass, ONE Pass), IRAS advance-tax-ruling negotiation, GTP tax incentives, IP/trademark registration and PDPA compliance.", "hq": "Singapore", "orgType": "Corporate Services", "status": "Active", "confidence": "High", "services": [["Corporate Services", "Company secretarial"], ["Corporate Services", "Incorporation & formation"], ["HR & Talent", "Immigration & relocation"], ["HR & Talent", "PEO & employer of record"], ["Legal Services", "Corporate & commercial law"], ["Regulatory & Compliance", "Compliance monitoring & assurance"], ["Tax Services", "Corporate tax compliance"], ["Tax Services", "Transfer pricing"]], "juris": ["Singapore"]}, {"name": "Santander", "website": "https://www.santander.com/", "about": "Banco Santander is a Spanish global universal bank with strong retail and commercial banking in Spain, UK, Brazil, Mexico and the US. For institutional and fund clients, most relevant for corporate banking, trade finance and FX. Owns Ebury (majority stake). UK arm inherited from Abbey/Alliance & Leicester.", "hq": "Spain", "orgType": "Global Bank", "status": "Active", "confidence": "High", "services": [["Banking & Treasury", "Cash management & liquidity"], ["Banking & Treasury", "Corporate banking"], ["Banking & Treasury", "FX & currency services"]], "juris": ["Global"]}, {"name": "SIX", "website": "https://www.six-group.com/", "about": "SIX Group is Switzerland's systemic market infrastructure operator, headquartered Zurich with major data centres in Geneva. Runs the SIX Swiss Exchange (national self-regulated exchange for equities, bonds and structured products); Securities Services (national Central Securities Depository \u2014 settlement and custody for the Swiss market and international clearing networks); and Financial Information Services (reference data, corporate actions, real-time pricing distributed globally). Leading on blockchain-based CSD modernisation.", "hq": "Switzerland", "orgType": "Market Infrastructure", "status": "Active", "confidence": "High", "services": [["Banking & Treasury", "Custody bank"], ["Banking & Treasury", "Fund & SPV banking"], ["Fund Administration", "Fund accounting & NAV"], ["Regulatory & Compliance", "Regulatory reporting (firm-level)"], ["Technology & Data", "Data & analytics"], ["Technology & Data", "RegTech & compliance software"]], "juris": ["Switzerland", "Europe"]}, {"name": "Solas", "website": "https://solasfs.com/en/#ef-body", "about": "Solas Fiduciary Services is a pure-play independent directorship and corporate governance firm founded 2016, dual-headquartered in Singapore and Hong Kong. Extensive coverage of alternative investment vehicles: hedge funds, funds of funds, private equity, real estate, infrastructure, fintech, family offices. Distinct specialty: governance of luxury physical assets (superyachts, private aircraft) with expertise in SOLAS, MARPOL, MLC 2006 and ICAO frameworks. Related entity Solas Capital acts as investment manager for European energy-efficiency infrastructure debt. Global professional network across Americas, Caribbean, Europe and MENA; primary regulatory footprint in Cayman Islands and Bermuda.", "hq": "Singapore", "orgType": "Fund Services", "status": "Active", "confidence": "High", "services": [["Advisory & Consulting", "ESG & sustainability"], ["Advisory & Consulting", "Fund formation & setup"], ["Advisory & Consulting", "M&A & transactions"], ["Advisory & Consulting", "Strategic & management consulting"], ["Corporate Services", "Company secretarial"], ["Corporate Services", "Directorship services"], ["Fund Administration", "Fund accounting & NAV"], ["Legal Services", "Corporate & commercial law"], ["Private Wealth", "Family office services"], ["Regulatory & Compliance", "AML, KYC & CDD"], ["Regulatory & Compliance", "Compliance monitoring & assurance"], ["Tax Services", "Tax advisory"]], "juris": ["Ireland", "Singapore", "Hong Kong", "Cayman Islands", "Bermuda"]}, {"name": "State Street", "website": "https://www.statestreet.com/", "about": "State Street Corporation is a US-headquartered custody bank and asset servicer, second-largest globally by assets under custody. Institutional-relevant services span custody, fund administration, transfer agency, securities lending and asset management (via SSGA). London and Dublin are key European hubs.", "hq": "United States of America", "orgType": "Custody Bank", "status": "Active", "confidence": "High", "services": [["Banking & Treasury", "Corporate banking"], ["Banking & Treasury", "Fund & SPV banking"], ["Fund Administration", "Depositary services"], ["Fund Administration", "Fund accounting & NAV"], ["Fund Administration", "Investor services & transfer agency"]], "juris": ["Global"]}, {"name": "SUMI Trust", "website": "", "about": "Sumitomo Mitsui Trust Bank (SMTB) is Japan's largest and most systemically important trust bank, part of Sumitomo Mitsui Trust Holdings. Legal mandate to manage massive asset pools in fiduciary capacity \u2014 corporate pension administration, asset custody, real-estate brokerage, stock transfer agency. Headquartered Tokyo with international branches in New York, London, Singapore and Hong Kong. Channels Japanese pension and savings capital into global PE, overseas real estate and foreign high-yield fixed income \u2014 a systemic liquidity provider globally.", "hq": "Japan", "orgType": "Trust Bank", "status": "Active", "confidence": "High", "services": [["Banking & Treasury", "Fund & SPV banking"], ["Corporate Services", "Trust & fiduciary services"], ["Fund Administration", "Fund accounting & NAV"], ["Fund Administration", "Investor services & transfer agency"], ["Private Wealth", "Wealth administration"], ["Real Estate", "Commercial property services"]], "juris": ["Japan", "United Kingdom", "United States of America"]}, {"name": "TD Bank", "website": "https://www.td.com/", "about": "TD Bank Group (Toronto-Dominion) is a Canadian multinational bank, the sixth-largest in North America by branch network. Universal model: Canadian and US Personal & Commercial banking, Wealth Management (including TD Asset Management and Epoch Investment Partners) and Wholesale Banking (TD Securities). TD Securities operates from 14 key financial centres: Toronto, Calgary, Montreal, Vancouver, NY, Boston, Chicago, Houston, Charlotte, Atlanta, Dallas, SF, London, Dublin, Belfast, Singapore, Hong Kong, Tokyo, Mumbai, Seoul, Shanghai, Tel Aviv.", "hq": "Canada", "orgType": "North American Bank", "status": "Active", "confidence": "High", "services": [["Advisory & Consulting", "M&A & transactions"], ["Banking & Treasury", "Cash management & liquidity"], ["Banking & Treasury", "Corporate banking"], ["Banking & Treasury", "FX & currency services"], ["Banking & Treasury", "Fund & SPV banking"], ["Banking & Treasury", "Private banking"], ["Fund Administration", "Fund accounting & NAV"]], "juris": ["Canada", "United States of America", "United Kingdom", "Ireland", "Singapore", "Hong Kong", "Japan", "India", "South Korea", "China", "Israel"]}, {"name": "The ReThink Group", "website": "https://therethinkgroup.net/", "about": "The ReThink Group is a specialist cognitive-performance and behavioural-advisory firm led by founder Denise Shull, targeting institutional finance and high-stakes professional environments. Its evidence-based 'Shull Method' rejects the emotion-elimination premise of traditional trader coaching and instead trains professionals to distinguish intuitive pattern recognition from FOMO and ego-driven decisions. Delivered through 1:1 coaching, structured e-learning ('Trader Brain'), and corporate workshops. Clients span institutional trading desks and elite motorsports teams. NOTE: this is a different firm to the UAE-based 'ReThink' already tracked.", "hq": "United States of America", "orgType": "Behavioural Advisory", "status": "Active", "confidence": "Medium", "services": [["Advisory & Consulting", "Strategic & management consulting"], ["HR & Talent", "HR consulting"], ["HR & Talent", "Training & development"]], "juris": ["United States of America", "United Kingdom", "Global"]}, {"name": "Treasury Spring", "website": "https://treasuryspring.com", "about": "TreasurySpring is a London-headquartered fintech founded 2018 that has re-engineered wholesale money-market access. Its Fixed-Term Fund (FTF) instrument gives family offices, PE funds, foundations and corporates direct, segregated exposure to sovereign, financial or corporate issuers for terms of 1 week to 1 year. Regulated by the Jersey FSC as an AIF Services Business. Every FTF is legally segregated and bankruptcy-remote. API integrations with Kyriba, Hazeltree and other TMS platforms. Multi-jurisdiction onboarding across Luxembourg, Channel Islands, Delaware; nine-currency handling. $225bn+ deployed by GPs alone.", "hq": "United Kingdom", "orgType": "Cash Management", "status": "Active", "confidence": "High", "services": [["Banking & Treasury", "Cash management & liquidity"], ["Banking & Treasury", "Corporate banking"], ["Banking & Treasury", "Fund & SPV banking"], ["Technology & Data", "Fund technology & portfolio systems"], ["Technology & Data", "RegTech & compliance software"]], "juris": ["United Kingdom", "Jersey", "Luxembourg", "United States of America"]}, {"name": "Trustmoore", "website": "https://www.trustmoore.com/", "about": "Trustmoore is an Amsterdam-founded (2005) boutique corporate and fund services platform, deliberately independent of bank ownership. Four pillars: Fund Services (admin, SPV, third-party AIFM), Corporate Clients (SPVs for holding structures), Capital Markets (structured finance \u2014 ABS, CLOs), and Private Clients (multi-jurisdictional family offices). Offices in Netherlands, Cura\u00e7ao (CBCS-supervised, DCSX listing advisor), UK, Luxembourg, Ireland, Malta, Switzerland, Singapore, Hong Kong and Bulgaria. Strategic 2024 partnership with IK Partners for growth capital.", "hq": "Netherlands", "orgType": "Corporate Services", "status": "Active", "confidence": "High", "services": [["Advisory & Consulting", "Fund formation & setup"], ["Advisory & Consulting", "Strategic & management consulting"], ["Corporate Services", "Company secretarial"], ["Corporate Services", "Directorship services"], ["Corporate Services", "Domiciliation"], ["Corporate Services", "Incorporation & formation"], ["Corporate Services", "Registered office & agent"], ["Fund Administration", "Financial statements & audit support"], ["Fund Administration", "Fund accounting & NAV"], ["Fund Administration", "Investor services & transfer agency"], ["Fund Administration", "Middle office & trade processing"], ["HR & Talent", "Payroll processing"], ["Legal Services", "Corporate & commercial law"], ["Private Wealth", "Family office services"], ["Private Wealth", "Wealth administration"], ["Regulatory & Compliance", "AIFMD & ManCo services"], ["Regulatory & Compliance", "AML, KYC & CDD"], ["Regulatory & Compliance", "Regulatory reporting (firm-level)"], ["Tax Services", "Corporate tax compliance"], ["Tax Services", "FATCA & CRS (AEoI)"], ["Technology & Data", "RegTech & compliance software"]], "juris": ["Netherlands", "Luxembourg", "Cayman Islands", "Virgin Islands (British)", "Curacao", "Hong Kong", "Malta", "United Kingdom", "United States of America", "Ireland", "Switzerland", "Singapore", "Bulgaria"]}, {"name": "UMB", "website": "https://www.umb.com/", "about": "UMB Fund Services (subsidiary of UMB Financial Corporation) is a Kansas City, Missouri-headquartered institutional-grade back-office platform for registered and alternative funds. Daily NAV calculation, financial statements, shadow accounting, transfer agency, middle-office IBOR/trade reconciliation. Notable capabilities: Multiple Series Trust and Collective Investment Trust platform sponsorship (for ERISA/401(k) plans, including 5500 filings and optional securities lending), tax blockers for interval and tender-offer funds to protect tax-exempt investors from UBTI. Landmark project: transitioning StepStone Group's flagship private-market interval funds to daily NAV admittance.", "hq": "United States of America", "orgType": "US Bank", "status": "Active", "confidence": "High", "services": [["Banking & Treasury", "Corporate banking"], ["Banking & Treasury", "Escrow & paying agent"], ["Banking & Treasury", "Fund & SPV banking"], ["Fund Administration", "Depositary services"], ["Fund Administration", "Financial statements & audit support"], ["Fund Administration", "Fund accounting & NAV"], ["Fund Administration", "Investor services & transfer agency"], ["Fund Administration", "Middle office & trade processing"], ["Tax Services", "Corporate tax compliance"]], "juris": ["United States of America"]}, {"name": "US Tax & Financial Services", "website": "https://www.ustaxfs.com/", "about": "US Tax & Financial Services (USTAXFS) specialises in US federal, state and local tax compliance for individuals, trusts and corporates caught in the extra-territorial reach of the US tax code. Individual expat tax prep, complex estate and trust planning, expatriation (renunciation) tax planning for HNWIs, and PFIC mitigation. Institutional side: FATCA compliance for non-US financial institutions, foreign investment funds and offshore trusts; Qualified Intermediary status management. Headquartered London with offices in Switzerland and the Middle East.", "hq": "United Kingdom", "orgType": "US Tax", "status": "Active", "confidence": "High", "services": [["Advisory & Consulting", "Fund formation & setup"], ["Corporate Services", "Trust & fiduciary services"], ["HR & Talent", "Immigration & relocation"], ["Private Wealth", "Estate & succession planning"], ["Tax Services", "Corporate tax compliance"], ["Tax Services", "FATCA & CRS (AEoI)"], ["Tax Services", "International tax structuring"], ["Tax Services", "Private client & personal tax"], ["Tax Services", "Tax advisory"]], "juris": ["United Kingdom", "United States of America", "Switzerland", "United Arab Emirates"]}, {"name": "Waystone", "website": "https://www.waystone.com/", "about": "Waystone is the preeminent global provider of third-party Management Company (ManCo) services for UCITS and AIFs, plus institutional fund governance and operational risk. Formed from mergers of DMS Governance, MDO and MontLake. HQ Ireland with major operational footprints in Luxembourg, Cayman Islands, UK and US. Delivers turnkey substance for US/Asian managers launching European funds \u2014 portfolio management delegation, daily risk oversight, compliance monitoring, cross-border distribution, plus independent fund directors for governance.", "hq": "Ireland", "orgType": "Governance & Compliance", "status": "Active", "confidence": "High", "services": [["Advisory & Consulting", "ESG & sustainability"], ["Corporate Services", "Directorship services"], ["Fund Administration", "Fund accounting & NAV"], ["Fund Administration", "Investor services & transfer agency"], ["Regulatory & Compliance", "AIFMD & ManCo services"], ["Regulatory & Compliance", "Compliance monitoring & assurance"], ["Regulatory & Compliance", "Regulatory reporting (firm-level)"]], "juris": ["Ireland", "Luxembourg", "United Kingdom", "Cayman Islands", "Global", "United States of America"]}, {"name": "Zarattini", "website": "https://www.zarattinibank.ch/en/", "about": "Banca Zarattini & Co. is a Swiss boutique bank founded 1991 (full banking licence 2005), FINMA-regulated, headquartered Lugano. Four service lines: Private Banking and Asset Management for HNWIs and institutions; an independent Fixed-Income Desk serving 400+ asset managers, brokers and insurers with proprietary bond trading; Trade Finance specialised in physical metals commodity trading; and Lombard/Swiss mortgage lending. Reported CHF 351.95m in total assets and CHF 108.11m profit (2025) with ~82 employees. FINMA closed a historic Venezuela-PDVSA AML enforcement in 2021 after full remediation.", "hq": "Switzerland", "orgType": "Private Bank", "status": "Active", "confidence": "High", "services": [["Advisory & Consulting", "Strategic & management consulting"], ["Banking & Treasury", "Private banking"], ["Fund Administration", "Financial statements & audit support"], ["Fund Administration", "Fund accounting & NAV"], ["Fund Administration", "Investor services & transfer agency"], ["Fund Administration", "Middle office & trade processing"], ["Private Wealth", "Wealth administration"]], "juris": ["Switzerland"]}], "categories": ["Advisory & Consulting", "Audit & Accounting", "Banking & Treasury", "Corporate Services", "Fund Administration", "HR & Talent", "Legal Services", "Private Wealth", "Real Estate", "Regulatory & Compliance", "Tax Services", "Technology & Data"], "category_counts": {"Advisory & Consulting": 50, "Audit & Accounting": 14, "Corporate Services": 48, "Fund Administration": 46, "HR & Talent": 30, "Legal Services": 33, "Tax Services": 32, "Regulatory & Compliance": 40, "Technology & Data": 34, "Banking & Treasury": 36, "Private Wealth": 22, "Real Estate": 4}, "subcategory_taxonomy": {"Advisory & Consulting": ["ESG & sustainability", "Fund formation & setup", "Investigations & forensics", "M&A & transactions", "Restructuring & insolvency", "Risk advisory", "Strategic & management consulting", "Valuation"], "Audit & Accounting": ["Bookkeeping & accounting", "Payroll", "Statutory audit"], "Corporate Services": ["Company secretarial", "Directorship services", "Domiciliation", "Incorporation & formation", "Registered office & agent", "Statutory filings & annual returns", "Trust & fiduciary services"], "Fund Administration": ["Depositary services", "Financial statements & audit support", "Fund accounting & NAV", "Investor services & transfer agency", "Middle office & trade processing"], "HR & Talent": ["HR consulting", "Immigration & relocation", "PEO & employer of record", "Payroll processing", "Recruitment & executive search", "Training & development"], "Legal Services": ["Corporate & commercial law", "Dispute resolution", "Employment law", "Financial services regulation", "Funds law", "Offshore law", "Real estate law"], "Tax Services": ["Corporate tax compliance", "FATCA & CRS (AEoI)", "International tax structuring", "Private client & personal tax", "Tax advisory", "Transfer pricing", "VAT & indirect tax"], "Regulatory & Compliance": ["AIFMD & ManCo services", "AML, KYC & CDD", "Compliance monitoring & assurance", "Licence applications & authorisations", "MLRO & outsourced compliance officer", "Regulatory reporting (firm-level)"], "Technology & Data": ["Cybersecurity & InfoSec", "Data & analytics", "Fund technology & portfolio systems", "IT advisory & implementation", "RegTech & compliance software"], "Banking & Treasury": ["Cash management & liquidity", "Corporate banking", "Custody bank", "Escrow & paying agent", "FX & currency services", "Fund & SPV banking", "Private banking"], "Private Wealth": ["Estate & succession planning", "Family office services", "Philanthropy structuring", "Trust services (private)", "Wealth administration"], "Real Estate": ["Commercial property services", "Property management", "Property valuation"]}, "subcategory_counts": {"Advisory & Consulting::ESG & sustainability": 20, "Advisory & Consulting::Fund formation & setup": 16, "Advisory & Consulting::Investigations & forensics": 10, "Advisory & Consulting::M&A & transactions": 23, "Advisory & Consulting::Restructuring & insolvency": 11, "Advisory & Consulting::Strategic & management consulting": 37, "Audit & Accounting::Bookkeeping & accounting": 10, "Corporate Services::Company secretarial": 30, "Corporate Services::Directorship services": 20, "Corporate Services::Incorporation & formation": 20, "Corporate Services::Registered office & agent": 8, "Corporate Services::Trust & fiduciary services": 17, "Fund Administration::Fund accounting & NAV": 44, "Fund Administration::Middle office & trade processing": 8, "HR & Talent::HR consulting": 18, "HR & Talent::Immigration & relocation": 10, "HR & Talent::PEO & employer of record": 3, "HR & Talent::Payroll processing": 14, "HR & Talent::Recruitment & executive search": 5, "Legal Services::Corporate & commercial law": 33, "Tax Services::Corporate tax compliance": 26, "Tax Services::Tax advisory": 16, "Legal Services::Funds law": 4, "Regulatory & Compliance::AML, KYC & CDD": 16, "Regulatory & Compliance::Compliance monitoring & assurance": 26, "Technology & Data::Data & analytics": 5, "Technology & Data::IT advisory & implementation": 18, "Advisory & Consulting::Risk advisory": 17, "Banking & Treasury::Cash management & liquidity": 17, "Banking & Treasury::FX & currency services": 15, "Technology & Data::Fund technology & portfolio systems": 12, "Corporate Services::Statutory filings & annual returns": 24, "HR & Talent::Training & development": 9, "Regulatory & Compliance::MLRO & outsourced compliance officer": 10, "Regulatory & Compliance::Regulatory reporting (firm-level)": 23, "Tax Services::FATCA & CRS (AEoI)": 11, "Technology & Data::Cybersecurity & InfoSec": 11, "Technology & Data::RegTech & compliance software": 19, "Fund Administration::Financial statements & audit support": 9, "Fund Administration::Investor services & transfer agency": 15, "Audit & Accounting::Payroll": 4, "Corporate Services::Domiciliation": 4, "Tax Services::Transfer pricing": 6, "Audit & Accounting::Statutory audit": 9, "Banking & Treasury::Corporate banking": 25, "Private Wealth::Family office services": 11, "Private Wealth::Philanthropy structuring": 6, "Private Wealth::Wealth administration": 14, "Banking & Treasury::Fund & SPV banking": 16, "Banking & Treasury::Private banking": 10, "Regulatory & Compliance::AIFMD & ManCo services": 7, "Legal Services::Dispute resolution": 6, "Legal Services::Employment law": 4, "Legal Services::Financial services regulation": 4, "Legal Services::Real estate law": 2, "Regulatory & Compliance::Licence applications & authorisations": 4, "Advisory & Consulting::Valuation": 3, "Real Estate::Commercial property services": 4, "Real Estate::Property management": 1, "Real Estate::Property valuation": 2, "Tax Services::International tax structuring": 6, "Private Wealth::Estate & succession planning": 8, "Banking & Treasury::Escrow & paying agent": 4, "Private Wealth::Trust services (private)": 4, "Fund Administration::Depositary services": 4, "Legal Services::Offshore law": 1, "Tax Services::Private client & personal tax": 3, "Tax Services::VAT & indirect tax": 2, "Banking & Treasury::Custody bank": 3}, "country_counts": {"Hong Kong": 15, "Singapore": 16, "China": 3, "Vietnam": 3, "Thailand": 2, "Malaysia": 3, "Indonesia": 1, "Philippines": 1, "Australia": 11, "India": 6, "Japan": 3, "Cambodia": 2, "Macau": 1, "New Zealand": 4, "South Korea": 2, "Taiwan": 1, "Anguilla": 2, "Bahamas": 2, "Belize": 1, "Virgin Islands (British)": 4, "Cayman Islands": 12, "Cyprus": 6, "Malta": 6, "Mauritius": 5, "United Kingdom": 43, "Switzerland": 8, "United States of America": 26, "Seychelles": 2, "Netherlands": 8, "Spain": 6, "Italy": 3, "Canada": 9, "Gibraltar": 1, "Guernsey": 6, "Jersey": 8, "Isle of Man": 3, "Germany": 2, "Luxembourg": 10, "France": 3, "Global": 24, "Paraguay": 1, "Liechtenstein": 1, "Austria": 1, "Egypt": 1, "Jordan": 1, "Kuwait": 1, "Saudi Arabia": 1, "United Arab Emirates": 9, "Ireland": 12, "Belgium": 1, "Albania": 1, "Chile": 1, "European Union": 5, "Israel": 2, "Nordics": 1, "Kazakhstan": 1, "Europe": 2, "South Africa": 4, "Bermuda": 3, "Myanmar": 1, "Portugal": 1, "Turkey": 1, "Grenada": 1, "Dominica": 1, "Antigua and Barbuda": 1, "Saint Lucia": 1, "Greece": 1, "Norway": 1, "Sweden": 1, "Monaco": 1, "Kenya": 1, "Sri Lanka": 1, "Mexico": 1, "Asia Pacific": 1, "Curacao": 1, "Bulgaria": 1}, "map_points": [{"country": "United Kingdom", "lat": 55.38, "lon": -3.44, "count": 43}, {"country": "United States of America", "lat": 37.09, "lon": -95.71, "count": 26}, {"country": "Singapore", "lat": 1.35, "lon": 103.82, "count": 16}, {"country": "Hong Kong", "lat": 22.32, "lon": 114.17, "count": 15}, {"country": "Cayman Islands", "lat": 19.31, "lon": -81.25, "count": 12}, {"country": "Ireland", "lat": 53.14, "lon": -7.69, "count": 12}, {"country": "Australia", "lat": -25.27, "lon": 133.78, "count": 11}, {"country": "Luxembourg", "lat": 49.82, "lon": 6.13, "count": 10}, {"country": "Canada", "lat": 56.13, "lon": -106.35, "count": 9}, {"country": "United Arab Emirates", "lat": 23.42, "lon": 53.85, "count": 9}, {"country": "Switzerland", "lat": 46.82, "lon": 8.23, "count": 8}, {"country": "Netherlands", "lat": 52.13, "lon": 5.29, "count": 8}, {"country": "Jersey", "lat": 49.21, "lon": -2.13, "count": 8}, {"country": "India", "lat": 20.59, "lon": 78.96, "count": 6}, {"country": "Cyprus", "lat": 35.13, "lon": 33.43, "count": 6}, {"country": "Malta", "lat": 35.94, "lon": 14.38, "count": 6}, {"country": "Spain", "lat": 40.46, "lon": -3.75, "count": 6}, {"country": "Guernsey", "lat": 49.47, "lon": -2.58, "count": 6}, {"country": "Mauritius", "lat": -20.35, "lon": 57.55, "count": 5}, {"country": "European Union", "lat": 50.85, "lon": 10.0, "count": 5}, {"country": "New Zealand", "lat": -40.9, "lon": 174.89, "count": 4}, {"country": "Virgin Islands (British)", "lat": 18.42, "lon": -64.64, "count": 4}, {"country": "South Africa", "lat": -30.56, "lon": 22.94, "count": 4}, {"country": "China", "lat": 35.86, "lon": 104.19, "count": 3}, {"country": "Vietnam", "lat": 14.06, "lon": 108.28, "count": 3}, {"country": "Malaysia", "lat": 4.21, "lon": 101.98, "count": 3}, {"country": "Japan", "lat": 36.2, "lon": 138.25, "count": 3}, {"country": "Italy", "lat": 41.87, "lon": 12.57, "count": 3}, {"country": "Isle of Man", "lat": 54.24, "lon": -4.55, "count": 3}, {"country": "France", "lat": 46.23, "lon": 2.21, "count": 3}, {"country": "Bermuda", "lat": 32.3, "lon": -64.75, "count": 3}, {"country": "Thailand", "lat": 15.87, "lon": 100.99, "count": 2}, {"country": "Cambodia", "lat": 12.57, "lon": 104.99, "count": 2}, {"country": "South Korea", "lat": 35.91, "lon": 127.77, "count": 2}, {"country": "Anguilla", "lat": 18.22, "lon": -63.07, "count": 2}, {"country": "Bahamas", "lat": 25.03, "lon": -77.4, "count": 2}, {"country": "Seychelles", "lat": -4.68, "lon": 55.49, "count": 2}, {"country": "Germany", "lat": 51.17, "lon": 10.45, "count": 2}, {"country": "Israel", "lat": 31.05, "lon": 34.85, "count": 2}, {"country": "Europe", "lat": 50.0, "lon": 10.0, "count": 2}, {"country": "Indonesia", "lat": -0.79, "lon": 113.92, "count": 1}, {"country": "Philippines", "lat": 12.88, "lon": 121.77, "count": 1}, {"country": "Macau", "lat": 22.2, "lon": 113.54, "count": 1}, {"country": "Taiwan", "lat": 23.7, "lon": 120.96, "count": 1}, {"country": "Belize", "lat": 17.19, "lon": -88.5, "count": 1}, {"country": "Gibraltar", "lat": 36.14, "lon": -5.35, "count": 1}, {"country": "Paraguay", "lat": -23.44, "lon": -58.44, "count": 1}, {"country": "Liechtenstein", "lat": 47.17, "lon": 9.55, "count": 1}, {"country": "Austria", "lat": 47.52, "lon": 14.55, "count": 1}, {"country": "Egypt", "lat": 26.82, "lon": 30.8, "count": 1}, {"country": "Jordan", "lat": 30.59, "lon": 36.24, "count": 1}, {"country": "Kuwait", "lat": 29.31, "lon": 47.48, "count": 1}, {"country": "Saudi Arabia", "lat": 23.89, "lon": 45.08, "count": 1}, {"country": "Belgium", "lat": 50.5, "lon": 4.47, "count": 1}, {"country": "Chile", "lat": -35.68, "lon": -71.54, "count": 1}, {"country": "Nordics", "lat": 63.0, "lon": 15.0, "count": 1}, {"country": "Kazakhstan", "lat": 48.02, "lon": 66.92, "count": 1}, {"country": "Myanmar", "lat": 21.91, "lon": 95.96, "count": 1}, {"country": "Portugal", "lat": 39.4, "lon": -8.22, "count": 1}, {"country": "Turkey", "lat": 38.96, "lon": 35.24, "count": 1}, {"country": "Grenada", "lat": 12.11, "lon": -61.68, "count": 1}, {"country": "Dominica", "lat": 15.41, "lon": -61.37, "count": 1}, {"country": "Antigua and Barbuda", "lat": 17.06, "lon": -61.8, "count": 1}, {"country": "Saint Lucia", "lat": 13.91, "lon": -60.98, "count": 1}, {"country": "Greece", "lat": 39.07, "lon": 21.82, "count": 1}, {"country": "Norway", "lat": 60.47, "lon": 8.47, "count": 1}, {"country": "Sweden", "lat": 60.13, "lon": 18.64, "count": 1}, {"country": "Monaco", "lat": 43.75, "lon": 7.41, "count": 1}, {"country": "Sri Lanka", "lat": 7.87, "lon": 80.77, "count": 1}, {"country": "Mexico", "lat": 23.63, "lon": -102.55, "count": 1}, {"country": "Asia Pacific", "lat": 10.0, "lon": 130.0, "count": 1}, {"country": "Curacao", "lat": 12.17, "lon": -68.99, "count": 1}, {"country": "Bulgaria", "lat": 42.73, "lon": 25.49, "count": 1}], "global_count": 24, "coverage_matrix": {"Advisory & Consulting": {"Hong Kong": 9, "Singapore": 11, "China": 3, "Vietnam": 2, "Thailand": 2, "Malaysia": 1, "Indonesia": 1, "Philippines": 1, "Australia": 8, "India": 5, "Japan": 2, "Cambodia": 2, "Macau": 1, "New Zealand": 4, "South Korea": 2, "Taiwan": 1, "Anguilla": 1, "Bahamas": 2, "Belize": 1, "Virgin Islands (British)": 3, "Cayman Islands": 8, "Cyprus": 4, "Malta": 6, "Mauritius": 5, "United Kingdom": 29, "Switzerland": 6, "United States of America": 17, "Seychelles": 2, "Netherlands": 6, "Spain": 4, "Italy": 2, "Canada": 6, "Gibraltar": 1, "Guernsey": 4, "Jersey": 5, "Isle of Man": 2, "Germany": 2, "Luxembourg": 4, "France": 3, "Paraguay": 1, "Austria": 1, "Egypt": 1, "Jordan": 1, "Kuwait": 1, "Saudi Arabia": 1, "United Arab Emirates": 8, "Belgium": 1, "Albania": 1, "Chile": 1, "European Union": 3, "Ireland": 9, "Israel": 2, "Nordics": 1, "Kazakhstan": 1, "Myanmar": 1, "Portugal": 1, "Turkey": 1, "South Africa": 2, "Grenada": 1, "Dominica": 1, "Antigua and Barbuda": 1, "Saint Lucia": 1, "Greece": 1, "Bermuda": 2, "Monaco": 1, "Kenya": 1, "Sri Lanka": 1, "Mexico": 1, "Asia Pacific": 1, "Curacao": 1, "Bulgaria": 1}, "Legal Services": {"Hong Kong": 8, "Singapore": 12, "China": 1, "Vietnam": 2, "Thailand": 2, "Malaysia": 2, "Indonesia": 1, "Philippines": 1, "Australia": 6, "India": 4, "Japan": 1, "Cambodia": 2, "Macau": 1, "New Zealand": 3, "South Korea": 1, "Taiwan": 1, "Anguilla": 2, "Bahamas": 2, "Belize": 1, "Virgin Islands (British)": 4, "Cayman Islands": 7, "Cyprus": 5, "Malta": 4, "Mauritius": 5, "United Kingdom": 17, "Switzerland": 4, "United States of America": 9, "Seychelles": 2, "Spain": 2, "Netherlands": 3, "Paraguay": 1, "Canada": 3, "Jersey": 4, "Guernsey": 3, "Belgium": 1, "Albania": 1, "Chile": 1, "United Arab Emirates": 5, "European Union": 2, "Ireland": 5, "Israel": 1, "Bermuda": 3, "Luxembourg": 3, "Myanmar": 1, "France": 1, "Portugal": 1, "Turkey": 1, "South Africa": 2, "Grenada": 1, "Dominica": 1, "Antigua and Barbuda": 1, "Saint Lucia": 1, "Greece": 1, "Italy": 1, "Monaco": 1, "Kenya": 1, "Sri Lanka": 1, "Isle of Man": 1, "Curacao": 1, "Bulgaria": 1}, "Fund Administration": {"Hong Kong": 10, "Singapore": 10, "China": 3, "Vietnam": 2, "Thailand": 1, "Malaysia": 3, "Indonesia": 1, "Philippines": 1, "Australia": 4, "India": 4, "Japan": 3, "Cambodia": 1, "Macau": 1, "New Zealand": 2, "South Korea": 2, "Taiwan": 1, "Anguilla": 1, "Bahamas": 2, "Belize": 1, "Virgin Islands (British)": 3, "Cayman Islands": 10, "Cyprus": 2, "Malta": 4, "Mauritius": 3, "United Kingdom": 21, "Switzerland": 7, "United States of America": 12, "Seychelles": 2, "Gibraltar": 1, "Guernsey": 6, "Jersey": 7, "Isle of Man": 3, "Germany": 2, "Luxembourg": 8, "France": 2, "Spain": 1, "Netherlands": 4, "Paraguay": 1, "Canada": 3, "Liechtenstein": 1, "Austria": 1, "Egypt": 1, "Jordan": 1, "Kuwait": 1, "Saudi Arabia": 1, "United Arab Emirates": 5, "Ireland": 9, "Belgium": 1, "Albania": 1, "Chile": 1, "European Union": 2, "Israel": 2, "Nordics": 1, "Kazakhstan": 1, "Norway": 1, "Sweden": 1, "South Africa": 2, "Bermuda": 2, "Monaco": 1, "Kenya": 1, "Italy": 1, "Europe": 1, "Curacao": 1, "Bulgaria": 1}, "Corporate Services": {"Hong Kong": 11, "Singapore": 13, "China": 2, "Vietnam": 3, "Thailand": 2, "Malaysia": 3, "Indonesia": 1, "Philippines": 1, "Australia": 7, "India": 5, "Japan": 2, "Cambodia": 2, "Macau": 1, "New Zealand": 4, "South Korea": 1, "Taiwan": 1, "Anguilla": 1, "Bahamas": 2, "Belize": 1, "Virgin Islands (British)": 3, "Cayman Islands": 11, "Cyprus": 3, "Malta": 5, "Mauritius": 5, "United Kingdom": 27, "Switzerland": 6, "United States of America": 17, "Seychelles": 2, "Gibraltar": 1, "Guernsey": 5, "Jersey": 6, "Isle of Man": 3, "Spain": 3, "Netherlands": 5, "Paraguay": 1, "Canada": 4, "Germany": 1, "Austria": 1, "France": 2, "Egypt": 1, "Jordan": 1, "Kuwait": 1, "Saudi Arabia": 1, "United Arab Emirates": 8, "Ireland": 11, "Luxembourg": 7, "Belgium": 1, "Albania": 1, "Chile": 1, "European Union": 3, "Israel": 1, "Nordics": 1, "Myanmar": 1, "Portugal": 1, "Turkey": 1, "South Africa": 3, "Grenada": 1, "Dominica": 1, "Antigua and Barbuda": 1, "Saint Lucia": 1, "Greece": 1, "Italy": 2, "Norway": 1, "Sweden": 1, "Bermuda": 2, "Monaco": 1, "Kenya": 1, "Sri Lanka": 1, "Mexico": 1, "Asia Pacific": 1, "Curacao": 1, "Bulgaria": 1}, "Tax Services": {"Hong Kong": 7, "Singapore": 9, "China": 2, "Vietnam": 2, "Thailand": 2, "Malaysia": 2, "Indonesia": 1, "Philippines": 1, "Australia": 5, "India": 2, "Japan": 1, "Cambodia": 2, "Macau": 1, "New Zealand": 2, "South Korea": 1, "Taiwan": 1, "Anguilla": 1, "Bahamas": 2, "Belize": 1, "Virgin Islands (British)": 3, "Cayman Islands": 6, "Cyprus": 3, "Malta": 5, "Mauritius": 4, "United Kingdom": 14, "Switzerland": 5, "United States of America": 7, "Seychelles": 2, "Gibraltar": 1, "Guernsey": 3, "Jersey": 3, "Isle of Man": 2, "Spain": 2, "Netherlands": 3, "Paraguay": 1, "Canada": 4, "Germany": 1, "Austria": 1, "France": 2, "Egypt": 1, "Jordan": 1, "Kuwait": 1, "Saudi Arabia": 1, "United Arab Emirates": 7, "Belgium": 1, "Albania": 1, "Chile": 1, "European Union": 2, "Ireland": 3, "Israel": 1, "Nordics": 1, "Myanmar": 1, "Portugal": 1, "Turkey": 1, "South Africa": 2, "Grenada": 1, "Dominica": 1, "Antigua and Barbuda": 1, "Saint Lucia": 1, "Greece": 1, "Italy": 1, "Bermuda": 2, "Monaco": 1, "Kenya": 1, "Luxembourg": 2, "Curacao": 1, "Bulgaria": 1}, "HR & Talent": {"Hong Kong": 7, "Singapore": 9, "China": 2, "Vietnam": 2, "Thailand": 2, "Malaysia": 2, "Indonesia": 1, "Philippines": 1, "Australia": 6, "India": 4, "Japan": 1, "Cambodia": 2, "Macau": 1, "New Zealand": 3, "South Korea": 1, "Taiwan": 1, "Anguilla": 1, "Bahamas": 1, "Belize": 1, "Virgin Islands (British)": 2, "Cayman Islands": 4, "Cyprus": 3, "Malta": 4, "Mauritius": 4, "United Kingdom": 18, "Switzerland": 3, "United States of America": 11, "Seychelles": 2, "Gibraltar": 1, "Guernsey": 1, "Jersey": 2, "Isle of Man": 1, "Spain": 2, "Netherlands": 3, "Paraguay": 1, "Canada": 3, "Germany": 1, "Austria": 1, "France": 2, "Egypt": 1, "Jordan": 1, "Kuwait": 1, "Saudi Arabia": 1, "United Arab Emirates": 7, "European Union": 2, "Ireland": 4, "Israel": 1, "Myanmar": 1, "Portugal": 1, "Turkey": 1, "South Africa": 2, "Grenada": 1, "Dominica": 1, "Antigua and Barbuda": 1, "Saint Lucia": 1, "Greece": 1, "Italy": 1, "Kenya": 1, "Luxembourg": 2, "Sri Lanka": 1, "Curacao": 1, "Bulgaria": 1}, "Audit & Accounting": {"Hong Kong": 3, "Singapore": 4, "China": 2, "Vietnam": 1, "Thailand": 1, "Malaysia": 2, "Indonesia": 1, "Philippines": 1, "Australia": 4, "India": 2, "Japan": 1, "Cambodia": 1, "Macau": 1, "New Zealand": 1, "South Korea": 1, "Taiwan": 1, "Anguilla": 1, "Bahamas": 1, "Belize": 1, "Virgin Islands (British)": 1, "Cayman Islands": 2, "Cyprus": 1, "Malta": 1, "Mauritius": 1, "United Kingdom": 5, "Switzerland": 1, "United States of America": 4, "Seychelles": 1, "Spain": 1, "Netherlands": 2, "Paraguay": 1, "Canada": 2, "Germany": 1, "Austria": 1, "France": 1, "Egypt": 1, "Jordan": 1, "Kuwait": 1, "Saudi Arabia": 1, "United Arab Emirates": 2, "Ireland": 1, "Israel": 1, "Luxembourg": 1, "Sri Lanka": 1}, "Technology & Data": {"United Kingdom": 22, "United States of America": 12, "Netherlands": 5, "Spain": 2, "Italy": 1, "Malta": 3, "Australia": 6, "Canada": 5, "Gibraltar": 1, "Guernsey": 3, "Jersey": 4, "Isle of Man": 1, "Germany": 2, "Luxembourg": 4, "France": 2, "China": 1, "Hong Kong": 7, "Austria": 1, "Egypt": 1, "Jordan": 1, "Kuwait": 1, "Saudi Arabia": 1, "United Arab Emirates": 4, "Ireland": 7, "Cayman Islands": 3, "Singapore": 8, "European Union": 3, "Cyprus": 2, "India": 4, "Mauritius": 1, "New Zealand": 2, "Israel": 1, "Nordics": 1, "Mexico": 1, "Vietnam": 1, "Malaysia": 1, "Asia Pacific": 1, "Switzerland": 2, "Europe": 1, "Virgin Islands (British)": 1, "Curacao": 1, "Bulgaria": 1}, "Regulatory & Compliance": {"United Kingdom": 22, "United States of America": 11, "Malta": 4, "Gibraltar": 1, "Guernsey": 4, "Jersey": 5, "Isle of Man": 3, "Spain": 2, "Netherlands": 3, "Paraguay": 1, "Australia": 5, "Canada": 3, "Cayman Islands": 9, "Ireland": 9, "Luxembourg": 6, "Belgium": 1, "Albania": 1, "Chile": 1, "Singapore": 10, "Hong Kong": 7, "United Arab Emirates": 6, "European Union": 4, "Cyprus": 3, "India": 3, "Mauritius": 4, "New Zealand": 2, "Israel": 1, "Nordics": 1, "Thailand": 1, "Vietnam": 1, "Cambodia": 1, "Myanmar": 1, "France": 1, "Portugal": 1, "Turkey": 1, "South Africa": 3, "Grenada": 1, "Dominica": 1, "Antigua and Barbuda": 1, "Saint Lucia": 1, "Greece": 1, "Italy": 2, "Norway": 1, "Sweden": 1, "Seychelles": 1, "Kenya": 1, "Malaysia": 1, "Switzerland": 4, "Sri Lanka": 1, "Bahamas": 1, "Europe": 1, "Bermuda": 1, "Virgin Islands (British)": 1, "Curacao": 1, "Bulgaria": 1}, "Banking & Treasury": {"United Kingdom": 17, "United States of America": 13, "Netherlands": 6, "Spain": 4, "Italy": 1, "Malta": 1, "Australia": 5, "Canada": 6, "Jersey": 2, "Guernsey": 1, "Liechtenstein": 1, "Belgium": 1, "Albania": 1, "Chile": 1, "India": 3, "Nordics": 1, "Luxembourg": 2, "Cayman Islands": 1, "European Union": 1, "Europe": 2, "Hong Kong": 5, "United Arab Emirates": 1, "South Africa": 1, "Ireland": 3, "Mexico": 1, "Singapore": 4, "New Zealand": 1, "Vietnam": 1, "Malaysia": 1, "Switzerland": 2, "Japan": 2, "South Korea": 1, "China": 1, "Israel": 1}, "Private Wealth": {"Netherlands": 3, "Australia": 3, "Canada": 2, "Belgium": 1, "Albania": 1, "Chile": 1, "United States of America": 8, "United Kingdom": 12, "Ireland": 5, "Cayman Islands": 6, "India": 2, "Israel": 1, "Singapore": 5, "Jersey": 4, "Hong Kong": 5, "Thailand": 1, "Vietnam": 1, "Cambodia": 1, "Myanmar": 1, "France": 1, "Portugal": 1, "Turkey": 1, "South Africa": 3, "Grenada": 1, "Dominica": 1, "Antigua and Barbuda": 1, "Saint Lucia": 1, "Malta": 3, "Cyprus": 1, "Greece": 1, "Italy": 2, "Spain": 1, "United Arab Emirates": 4, "Mauritius": 3, "New Zealand": 2, "Guernsey": 3, "Isle of Man": 2, "Norway": 1, "Sweden": 1, "Bermuda": 2, "Virgin Islands (British)": 2, "Switzerland": 6, "Monaco": 1, "Seychelles": 1, "Kenya": 1, "Luxembourg": 2, "Bahamas": 1, "Japan": 1, "Curacao": 1, "Bulgaria": 1}, "Real Estate": {"Ireland": 1, "United Kingdom": 2, "Jersey": 1, "Guernsey": 1, "Isle of Man": 1, "Malta": 1, "Mauritius": 1, "Switzerland": 1, "United Arab Emirates": 1, "Bahamas": 1, "Japan": 1, "United States of America": 1}}};
+
+// -------------------- State --------------------
+const state = {
+  selectedCats: new Set(),
+  selectedSubcats: new Set(),      // stored as "Category::Subcategory" strings
+  selectedRegions: new Set(),      // EMEA / MENA / APAC / Americas
+  selectedCountries: new Set(),    // may include "Global"
+  search: '',
+  sortCol: 'name',
+  sortDir: 'asc',
+};
+
+// Region → country membership. Regional shorthands (European Union, Nordics etc.) mapped to their parent region.
+const REGIONS = {
+  "EMEA": [
+    // Europe
+    "United Kingdom","Ireland","Jersey","Guernsey","Isle of Man","Iceland",
+    "Netherlands","Belgium","Luxembourg","Germany","France","Switzerland",
+    "Liechtenstein","Austria","Italy","Malta","Cyprus","Spain","Portugal","Gibraltar",
+    "Greece","Bulgaria","Sweden","Norway","Denmark","Finland","Poland","Ukraine","Albania","Turkey",
+    "European Union","Nordics","Europe",
+    // Middle East
+    "United Arab Emirates","Saudi Arabia","Kuwait","Jordan","Israel","Qatar","Bahrain","Oman",
+    // Africa
+    "Egypt","Mauritius","South Africa","Seychelles","Kenya","Morocco",
+  ],
+  "MENA": [
+    "United Arab Emirates","Saudi Arabia","Kuwait","Jordan","Israel","Qatar","Bahrain","Oman",
+    "Egypt","Morocco",
+  ],
+  "APAC": [
+    "China","Japan","India","Sri Lanka","Hong Kong","Macau","Taiwan","Singapore",
+    "Malaysia","Indonesia","Philippines","Thailand","Vietnam","Cambodia","Myanmar",
+    "South Korea","Kazakhstan","Pakistan","Bangladesh",
+    "Australia","New Zealand",
+    "Asia","Asia Pacific",
+  ],
+  "Americas": [
+    "United States of America","Canada","Mexico",
+    "Bahamas","Cayman Islands","Anguilla","Bermuda","Virgin Islands (British)",
+    "Curacao","Grenada","Dominica","Antigua and Barbuda","Saint Lucia",
+    "Chile","Paraguay","Brazil","Argentina","Colombia","Peru","Panama","Belize",
+    "Americas",
+  ],
+};
+// Reverse index — for fast lookup
+const COUNTRY_TO_REGIONS = {};
+Object.entries(REGIONS).forEach(([r, cs]) => {
+  cs.forEach(c => {
+    if (!COUNTRY_TO_REGIONS[c]) COUNTRY_TO_REGIONS[c] = new Set();
+    COUNTRY_TO_REGIONS[c].add(r);
+  });
+});
+
+// -------------------- Filtering --------------------
+function vendorMatchesChips(v) {
+  if (state.selectedCats.size > 0) {
+    const vendorCats = new Set(v.services.map(s => s[0]));
+    let hit = false;
+    for (const c of state.selectedCats) if (vendorCats.has(c)) { hit = true; break; }
+    if (!hit) return false;
+  }
+  if (state.selectedSubcats.size > 0) {
+    const vendorSubcatKeys = new Set(v.services.map(s => `${s[0]}::${s[1]}`));
+    let hit = false;
+    for (const key of state.selectedSubcats) if (vendorSubcatKeys.has(key)) { hit = true; break; }
+    if (!hit) return false;
+  }
+  if (state.selectedCountries.size > 0) {
+    // Strict match: the vendor must be explicitly tagged with the selected jurisdiction.
+    // "Global" is a distinct chip — click it if you also want globally-active firms.
+    let hit = false;
+    for (const c of state.selectedCountries) {
+      if (v.juris.includes(c)) { hit = true; break; }
+    }
+    if (!hit) return false;
+  } else if (state.selectedRegions.size > 0) {
+    // Region filter applies only when no specific country is chosen.
+    // A vendor matches if any of its jurisdictions falls in any selected region.
+    const allowed = new Set();
+    state.selectedRegions.forEach(r => (REGIONS[r] || []).forEach(c => allowed.add(c)));
+    let hit = false;
+    for (const j of v.juris) {
+      if (allowed.has(j)) { hit = true; break; }
+    }
+    if (!hit) return false;
+  }
+  return true;
+}
+// How many vendors are Global-tagged but excluded from the current country filter
+function globalNotShown() {
+  if (state.selectedCountries.size === 0) return 0;
+  if (state.selectedCountries.has('Global')) return 0;
+  return DATA.vendors.filter(v =>
+    v.juris.includes('Global') && !v.juris.some(j => state.selectedCountries.has(j))
+    && (state.selectedCats.size === 0 || v.services.some(s => state.selectedCats.has(s[0])))
+  ).length;
+}
+function vendorMatchesSearch(v) {
+  if (!state.search) return true;
+  const q = state.search.toLowerCase();
+  // Match against name, HQ, org type, description AND service tags AND jurisdictions.
+  // Typing "Depositary" or "AIFMD" in the search box now finds vendors with those service tags,
+  // not just vendors whose description happens to include the word.
+  if (v.name    && v.name.toLowerCase().includes(q))    return true;
+  if (v.hq      && v.hq.toLowerCase().includes(q))      return true;
+  if (v.orgType && v.orgType.toLowerCase().includes(q)) return true;
+  if (v.about   && v.about.toLowerCase().includes(q))   return true;
+  if (v.services && v.services.some(s =>
+      (s[0] && s[0].toLowerCase().includes(q)) ||
+      (s[1] && s[1].toLowerCase().includes(q))
+  )) return true;
+  if (v.juris && v.juris.some(j => j && j.toLowerCase().includes(q))) return true;
+  return false;
+}
+function filteredVendors() {
+  return DATA.vendors.filter(v => vendorMatchesChips(v) && vendorMatchesSearch(v));
+}
+
+// Faceted counts: how many vendors match the current filter, IGNORING one specific filter type.
+// Used so each chip shows "if I add this filter, how many vendors will match".
+// exclude: array of filter names to skip when scoring — 'cat', 'subcat', 'country', 'region'.
+function vendorsUnderPartialFilter(exclude) {
+  const excludeSet = new Set(exclude || []);
+  return DATA.vendors.filter(v => {
+    if (!excludeSet.has('cat') && state.selectedCats.size > 0) {
+      const vc = new Set(v.services.map(s => s[0]));
+      let hit = false;
+      for (const c of state.selectedCats) if (vc.has(c)) { hit = true; break; }
+      if (!hit) return false;
+    }
+    if (!excludeSet.has('subcat') && state.selectedSubcats.size > 0) {
+      const sk = new Set(v.services.map(s => `${s[0]}::${s[1]}`));
+      let hit = false;
+      for (const k of state.selectedSubcats) if (sk.has(k)) { hit = true; break; }
+      if (!hit) return false;
+    }
+    if (!excludeSet.has('country') && state.selectedCountries.size > 0) {
+      let hit = false;
+      for (const c of state.selectedCountries) if (v.juris.includes(c)) { hit = true; break; }
+      if (!hit) return false;
+    } else if (!excludeSet.has('country') && !excludeSet.has('region') && state.selectedRegions.size > 0) {
+      const allowed = new Set();
+      state.selectedRegions.forEach(r => (REGIONS[r] || []).forEach(c => allowed.add(c)));
+      if (!v.juris.some(j => allowed.has(j))) return false;
+    }
+    return true;
+  });
+}
+// Vendors filtered by chips only (for map bubble sizing so search doesn't shrink the map)
+function chipFilteredVendors() {
+  return DATA.vendors.filter(vendorMatchesChips);
+}
+
+// -------------------- Chips --------------------
+function renderCategoryChips() {
+  const el = document.getElementById('cat-chips');
+  el.innerHTML = '';
+  // Faceted count: for each category, count vendors that match all OTHER filters and have that category
+  const baseVendors = vendorsUnderPartialFilter(['cat', 'subcat']);
+  const dynamicCatCounts = {};
+  DATA.categories.forEach(c => dynamicCatCounts[c] = 0);
+  baseVendors.forEach(v => {
+    const seen = new Set();
+    v.services.forEach(s => {
+      if (!seen.has(s[0])) { dynamicCatCounts[s[0]] = (dynamicCatCounts[s[0]]||0) + 1; seen.add(s[0]); }
+    });
+  });
+  DATA.categories.forEach(cat => {
+    const count = dynamicCatCounts[cat] || 0;
+    const c = document.createElement('span');
+    c.className = 'chip' + (count === 0 ? ' empty' : '');
+    c.dataset.cat = cat;
+    c.innerHTML = `${cat} <span class="count">${count}</span>`;
+    c.addEventListener('click', () => {
+      if (state.selectedCats.has(cat)) state.selectedCats.delete(cat);
+      else state.selectedCats.add(cat);
+      render();
+    });
+    el.appendChild(c);
+  });
+}
+function renderSubcatChips() {
+  const section = document.getElementById('subcat-section');
+  const el = document.getElementById('subcat-chips');
+  el.innerHTML = '';
+  // Show sub-cats only when at least one category is selected
+  if (state.selectedCats.size === 0) {
+    section.style.display = 'none';
+    // NOTE: don't clear state.selectedSubcats here — the Ask feature can set
+    // sub-cats without a parent category, and this used to wipe them silently.
+    return;
+  }
+  section.style.display = '';
+  // Order: iterate selected cats in canonical order
+  const orderedCats = CATEGORY_ORDER.filter(c => state.selectedCats.has(c));
+  // Faceted counts: exclude subcat filter so each subcat chip shows "if I add this, how many"
+  const subcatBase = vendorsUnderPartialFilter(['subcat']);
+  const dynamicSubcatCounts = {};
+  subcatBase.forEach(v => {
+    const seen = new Set();
+    v.services.forEach(s => {
+      const key = `${s[0]}::${s[1]}`;
+      if (!seen.has(key)) { dynamicSubcatCounts[key] = (dynamicSubcatCounts[key]||0) + 1; seen.add(key); }
+    });
+  });
+  orderedCats.forEach(cat => {
+    const subs = (DATA.subcategory_taxonomy[cat] || []).slice().sort();
+    if (subs.length === 0) return;
+    const colour = CATEGORY_COLOURS[cat] || '#858EA0';
+    subs.forEach(sub => {
+      const key = `${cat}::${sub}`;
+      const count = dynamicSubcatCounts[key] || 0;
+      const c = document.createElement('span');
+      c.className = 'chip subcat' + (count === 0 ? ' empty' : '');
+      c.dataset.subKey = key;
+      c.innerHTML =
+        `<span class="subcat-label" style="background:${colour}">${escape(cat.substring(0,3).toUpperCase())}</span>`
+        + `${escape(sub)} <span class="count">${count}</span>`;
+      c.addEventListener('click', () => {
+        if (state.selectedSubcats.has(key)) state.selectedSubcats.delete(key);
+        else state.selectedSubcats.add(key);
+        render();
+      });
+      el.appendChild(c);
+    });
+  });
+}
+function renderRegionChips() {
+  const el = document.getElementById('region-chips');
+  el.innerHTML = '';
+  // Faceted: count vendors matching current cat/subcat filters, per region
+  const baseVendors = vendorsUnderPartialFilter(['country', 'region']);
+  const counts = {};
+  Object.keys(REGIONS).forEach(r => {
+    const allowed = new Set(REGIONS[r]);
+    counts[r] = baseVendors.filter(v => v.juris.some(j => allowed.has(j))).length;
+  });
+  Object.keys(REGIONS).forEach(region => {
+    const count = counts[region];
+    const c = document.createElement('span');
+    c.className = 'chip region' + (count === 0 ? ' empty' : '');
+    c.dataset.region = region;
+    c.innerHTML = `${region} <span class="count">${count}</span>`;
+    c.addEventListener('click', () => {
+      if (state.selectedRegions.has(region)) state.selectedRegions.delete(region);
+      else state.selectedRegions.add(region);
+      // Clear any selected country chips no longer visible under the new region scope
+      const allowed = new Set();
+      state.selectedRegions.forEach(r => (REGIONS[r] || []).forEach(x => allowed.add(x)));
+      if (state.selectedRegions.size > 0) {
+        Array.from(state.selectedCountries).forEach(cc => {
+          if (!allowed.has(cc)) state.selectedCountries.delete(cc);
+        });
+      }
+      render();
+    });
+    el.appendChild(c);
+  });
+}
+function renderCountryChips() {
+  const el = document.getElementById('country-chips');
+  el.innerHTML = '';
+  // Build the pool of allowed countries (based on selected regions if any)
+  let allowedCountries = null;   // null = no region filter, show everything
+  if (state.selectedRegions.size > 0) {
+    allowedCountries = new Set();
+    state.selectedRegions.forEach(r => (REGIONS[r] || []).forEach(c => allowedCountries.add(c)));
+  }
+  // Faceted counts: vendors matching cat/subcat filters, per country (ignore country filter itself)
+  const baseVendors = vendorsUnderPartialFilter(['country']);
+  const dynamicCountryCounts = {};
+  Object.keys(DATA.country_counts).filter(k => k !== 'Global').forEach(k => dynamicCountryCounts[k] = 0);
+  baseVendors.forEach(v => {
+    v.juris.forEach(j => {
+      if (j !== 'Global' && dynamicCountryCounts.hasOwnProperty(j)) {
+        dynamicCountryCounts[j]++;
+      }
+    });
+  });
+  const entries = Object.entries(dynamicCountryCounts)
+    .filter(([k]) => !allowedCountries || allowedCountries.has(k))
+    .sort(([a], [b]) => a.localeCompare(b));
+  if (entries.length === 0) {
+    el.innerHTML = '<span style="color: var(--grey); font-style: italic; font-size: 13px;">No jurisdictions in the selected region.</span>';
+    return;
+  }
+  entries.forEach(([country, count]) => {
+    const c = document.createElement('span');
+    c.className = 'chip' + (count === 0 ? ' empty' : '');
+    c.dataset.country = country;
+    c.innerHTML = `${country} <span class="count">${count}</span>`;
+    c.addEventListener('click', () => {
+      if (state.selectedCountries.has(country)) state.selectedCountries.delete(country);
+      else state.selectedCountries.add(country);
+      render();
+    });
+    el.appendChild(c);
+  });
+}
+function scrollToResults() {
+  const el = document.querySelector('.table-section');
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+function updateChipActive() {
+  document.querySelectorAll('#cat-chips .chip').forEach(el => {
+    el.classList.toggle('active', state.selectedCats.has(el.dataset.cat));
+  });
+  document.querySelectorAll('#subcat-chips .chip').forEach(el => {
+    el.classList.toggle('active', state.selectedSubcats.has(el.dataset.subKey));
+  });
+  document.querySelectorAll('#region-chips .chip').forEach(el => {
+    el.classList.toggle('active', state.selectedRegions.has(el.dataset.region));
+  });
+  document.querySelectorAll('#country-chips .chip').forEach(el => {
+    el.classList.toggle('active', state.selectedCountries.has(el.dataset.country));
+  });
+  document.getElementById('global-badge').classList.toggle('active', state.selectedCountries.has('Global'));
+}
+
+// -------------------- Map --------------------
+// Simplified continent polygons — [lon,lat] pairs. Purely for spatial reference.
+// Detailed continent outlines — [lon,lat] pairs, hand-refined for coastline recognisability.
+const CONTINENTS = {
+  north_america: [
+    [-110,22],[-107,25],[-109,27],[-113,30],[-114,32],[-118,33],[-120,34],[-122,37],
+    [-124,40],[-124,43],[-124,47],[-127,49],[-131,52],[-135,55],[-140,58],[-142,60],
+    [-150,60],[-160,60],[-166,64],[-166,68],[-160,71],[-155,71],[-140,70],[-130,70],
+    [-118,72],[-100,73],[-85,73],[-75,74],[-72,78],[-63,82],[-50,82],[-55,72],
+    [-55,60],[-58,55],[-62,50],[-65,47],[-67,45],[-70,43],[-72,41],[-74,40],
+    [-75,39],[-76,37],[-76,35],[-78,33],[-80,30],[-80,27],[-80,25],[-82,25],
+    [-83,28],[-85,29],[-87,30],[-90,30],[-93,29],[-96,28],[-97,26],[-97,22],
+    [-98,20],[-100,20],[-105,20],[-107,21],[-110,22]
+  ],
+  greenland: [
+    [-52,60],[-45,60],[-40,63],[-30,65],[-22,70],[-20,75],[-18,80],[-25,83],
+    [-40,84],[-55,82],[-60,78],[-58,72],[-55,65],[-52,60]
+  ],
+  south_america: [
+    [-78,8],[-75,10],[-72,12],[-68,12],[-60,11],[-52,5],[-50,0],[-45,-3],
+    [-40,-5],[-35,-6],[-37,-15],[-40,-22],[-46,-25],[-52,-31],[-58,-35],
+    [-62,-40],[-67,-45],[-71,-50],[-74,-53],[-72,-54],[-70,-53],[-71,-45],
+    [-72,-38],[-71,-32],[-71,-25],[-71,-18],[-75,-15],[-79,-9],[-81,-6],
+    [-81,-3],[-80,0],[-79,3],[-77,5],[-78,8]
+  ],
+  europe: [
+    [-9,44],[-9,42],[-7,38],[-5,36],[-2,36],[3,37],[5,38],[8,44],[9,44],
+    [11,42],[13,40],[15,39],[18,40],[22,39],[26,38],[30,40],[34,41],[36,42],
+    [40,43],[44,42],[47,42],[49,45],[47,48],[42,48],[40,55],[42,60],[40,65],
+    [30,68],[25,70],[20,70],[10,68],[5,63],[0,60],[-2,58],[-6,58],[-8,55],
+    [-10,50],[-10,44],[-9,44]
+  ],
+  africa: [
+    [-17,20],[-16,15],[-15,10],[-10,5],[-5,3],[0,4],[8,4],[10,2],[14,-2],
+    [16,-6],[18,-10],[20,-14],[22,-18],[24,-22],[26,-26],[28,-30],[32,-34],
+    [35,-33],[38,-30],[40,-25],[42,-18],[45,-15],[48,-10],[51,-4],[51,2],
+    [48,8],[45,12],[42,15],[38,18],[35,22],[30,25],[26,32],[20,32],[15,32],
+    [8,33],[0,34],[-8,33],[-13,29],[-16,25],[-17,20]
+  ],
+  asia: [
+    [27,42],[32,42],[38,42],[42,42],[45,44],[48,45],[52,45],[56,44],[60,45],
+    [65,45],[70,50],[75,55],[80,58],[85,60],[90,65],[100,68],[110,70],[125,70],
+    [140,68],[150,66],[160,65],[168,66],[175,68],[180,70],[180,74],[172,76],
+    [155,72],[135,74],[115,72],[100,72],[85,70],[70,68],[55,60],[45,55],
+    [40,50],[38,45],[35,42],[30,42],[27,42]
+  ],
+  asia_southeast: [
+    [92,22],[95,22],[100,20],[105,20],[108,20],[110,18],[112,20],[115,20],
+    [118,20],[122,18],[122,12],[122,7],[120,5],[118,7],[115,5],[110,3],
+    [105,2],[100,3],[95,10],[92,17],[92,22]
+  ],
+  arabian_peninsula: [
+    [35,29],[40,29],[45,25],[50,22],[55,22],[57,25],[54,17],[52,15],
+    [48,12],[45,12],[42,15],[40,20],[38,22],[35,25],[35,29]
+  ],
+  india: [
+    [68,24],[72,20],[73,15],[76,10],[80,7],[81,10],[80,15],[83,18],[85,20],
+    [88,22],[92,22],[92,27],[88,27],[80,28],[72,28],[68,25],[68,24]
+  ],
+  japan: [
+    [130,33],[133,34],[136,35],[139,36],[140,38],[141,40],[141,43],[144,44],
+    [145,44],[144,42],[141,40],[140,38],[137,36],[133,34],[131,32],[130,33]
+  ],
+  japan_south: [
+    [128,32],[131,32],[131,34],[128,34],[128,32]
+  ],
+  australia: [
+    [113,-22],[113,-18],[115,-14],[122,-13],[128,-13],[130,-11],[135,-12],
+    [138,-11],[141,-10],[143,-11],[145,-14],[148,-19],[152,-24],[153,-28],
+    [153,-33],[150,-37],[147,-38],[143,-38],[139,-37],[135,-35],[128,-34],
+    [123,-34],[118,-35],[115,-33],[113,-27],[113,-22]
+  ],
+  new_zealand_n: [
+    [172,-34],[176,-35],[178,-38],[177,-41],[173,-41],[172,-38],[172,-34]
+  ],
+  new_zealand_s: [
+    [166,-46],[171,-44],[173,-42],[174,-42],[173,-46],[170,-47],[166,-46]
+  ],
+  uk: [
+    [-6,50],[-4,50],[-2,51],[0,52],[1,53],[0,55],[-2,58],[-4,58],[-6,57],
+    [-6,55],[-5,53],[-6,50]
+  ],
+  ireland: [
+    [-10,52],[-8,51],[-6,52],[-6,54],[-8,55],[-10,55],[-10,52]
+  ],
+  iceland: [
+    [-24,64],[-19,64],[-14,64],[-13,65],[-14,66],[-19,66],[-24,66],[-24,64]
+  ],
+  madagascar: [
+    [43,-25],[46,-25],[48,-20],[50,-15],[49,-12],[47,-15],[44,-20],[43,-22],[43,-25]
+  ],
+  indonesia_java: [
+    [95,-2],[105,-2],[115,-3],[125,-3],[130,-4],[140,-2],[141,-3],[141,-9],
+    [135,-8],[125,-9],[115,-9],[105,-8],[95,-6],[95,-2]
+  ],
+  philippines: [
+    [120,10],[122,12],[125,10],[126,14],[124,17],[121,18],[120,15],[120,10]
+  ],
+  cuba: [
+    [-85,22],[-78,21],[-74,20],[-75,22],[-80,23],[-85,22]
+  ],
+  hispaniola: [
+    [-73,17],[-70,18],[-68,19],[-72,20],[-73,17]
+  ],
+  sri_lanka: [
+    [79,6],[82,6],[82,10],[80,10],[79,6]
+  ],
+  taiwan: [
+    [120,22],[122,22],[122,25],[121,25],[120,24],[120,22]
+  ],
+};
+
+const svg = () => document.getElementById('map-svg');
+function lonToX(lon) { return lon; }
+function latToY(lat) { return -lat; }
+
+function renderMap() {
+  const s = svg();
+  // Preserve <defs> — only remove dynamic content
+  Array.from(s.children).forEach(el => {
+    if (el.tagName.toLowerCase() !== 'defs') el.remove();
+  });
+  const NS = 'http://www.w3.org/2000/svg';
+
+  // Gridlines
+  for (let lon = -180; lon <= 180; lon += 30) {
+    const line = document.createElementNS(NS, 'line');
+    line.setAttribute('x1', lon); line.setAttribute('y1', -85);
+    line.setAttribute('x2', lon); line.setAttribute('y2', 85);
+    line.setAttribute('class', 'map-grid');
+    s.appendChild(line);
+  }
+  for (let lat = -60; lat <= 60; lat += 30) {
+    const line = document.createElementNS(NS, 'line');
+    line.setAttribute('x1', -180); line.setAttribute('y1', -lat);
+    line.setAttribute('x2', 180);  line.setAttribute('y2', -lat);
+    line.setAttribute('class', 'map-grid');
+    s.appendChild(line);
+  }
+
+  // Continents
+  Object.values(CONTINENTS).forEach(pts => {
+    const poly = document.createElementNS(NS, 'polygon');
+    poly.setAttribute('class', 'map-land');
+    poly.setAttribute('points', pts.map(p => `${lonToX(p[0])},${latToY(p[1])}`).join(' '));
+    s.appendChild(poly);
+  });
+
+  // Bubbles (initial — count for all vendors)
+  renderBubbles();
+}
+
+// Recompute per-country counts against current filter state (excluding country filter itself for map fairness)
+function currentCountryCounts() {
+  const chipsForCat = state.selectedCats;
+  // For the map, we always show country coverage but weighted by category filter (so filtering by "Fund Administration" shrinks bubbles to only fund-admin vendors per country).
+  // We do NOT apply the country chip filter to counts — country filter just highlights matched bubbles.
+  const counts = {};
+  DATA.vendors.forEach(v => {
+    // Apply category filter only for counts
+    if (chipsForCat.size > 0) {
+      const vc = new Set(v.services.map(s => s[0]));
+      let hit = false;
+      for (const c of chipsForCat) if (vc.has(c)) { hit = true; break; }
+      if (!hit) return;
+    }
+    v.juris.forEach(j => { counts[j] = (counts[j] || 0) + 1; });
+  });
+  return counts;
+}
+
+function renderBubbles() {
+  const s = svg();
+  // Remove existing bubbles / labels
+  s.querySelectorAll('.map-bubble-group').forEach(el => el.remove());
+  const NS = 'http://www.w3.org/2000/svg';
+  const counts = currentCountryCounts();
+  DATA.map_points.forEach(p => {
+    const c = counts[p.country] || 0;
+    if (c === 0) return;  // hide when zero — the whole point of dynamic sizing
+    const g = document.createElementNS(NS, 'g');
+    g.setAttribute('class', 'map-bubble-group');
+    const circle = document.createElementNS(NS, 'circle');
+    circle.setAttribute('cx', lonToX(p.lon));
+    circle.setAttribute('cy', latToY(p.lat));
+    const r = Math.max(1.8, Math.min(9, 1.6 + Math.sqrt(c) * 1.5));
+    circle.setAttribute('r', r);
+    circle.setAttribute('class', 'map-bubble' + (state.selectedCountries.has(p.country) ? ' selected' : ''));
+    circle.dataset.country = p.country;
+    const shade = c >= 10 ? '#F5AB0A' : c >= 5 ? '#0077C8' : c >= 3 ? '#66ADDE' : '#99C9E9';
+    circle.setAttribute('fill', shade);
+    circle.addEventListener('mouseenter', e => showTooltip(e, p, c));
+    circle.addEventListener('mousemove', e => positionTooltip(e));
+    circle.addEventListener('mouseleave', hideTooltip);
+    circle.addEventListener('click', () => {
+      if (state.selectedCountries.has(p.country)) state.selectedCountries.delete(p.country);
+      else state.selectedCountries.add(p.country);
+      render();
+    });
+    g.appendChild(circle);
+    if (c >= 5) {
+      const t = document.createElementNS(NS, 'text');
+      t.setAttribute('x', lonToX(p.lon));
+      t.setAttribute('y', latToY(p.lat) - r - 1.2);
+      t.setAttribute('class', 'map-country-label');
+      t.textContent = p.country.length > 14 ? p.country.substring(0, 12) + '…' : p.country;
+      g.appendChild(t);
+    }
+    s.appendChild(g);
+  });
+}
+
+function showTooltip(e, p, count) {
+  const tt = document.getElementById('map-tooltip');
+  tt.innerHTML = `${p.country}<div class="sub">${count} vendor${count===1?'':'s'} — click to filter</div>`;
+  tt.style.opacity = '1';
+  positionTooltip(e);
+}
+function positionTooltip(e) {
+  const tt = document.getElementById('map-tooltip');
+  const wrap = document.getElementById('map-wrap').getBoundingClientRect();
+  tt.style.left = (e.clientX - wrap.left + 12) + 'px';
+  tt.style.top  = (e.clientY - wrap.top  + 12) + 'px';
+}
+function hideTooltip() { document.getElementById('map-tooltip').style.opacity = '0'; }
+
+// -------------------- Category chart --------------------
+let categoryChart;
+// Chart.js was removed to make this file fully offline-capable. Stub functions to no-ops.
+function renderCategoryChart_disabled() {
+  const ctx = document.getElementById('cat-chart').getContext('2d');
+  const cats = [...DATA.categories];
+  categoryChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: cats,
+      datasets: [{
+        label: 'Vendors',
+        data: cats.map(c => DATA.category_counts[c] || 0),
+        backgroundColor: cats.map(c => state.selectedCats.has(c) ? '#F5AB0A' : '#0077C8'),
+        borderColor: '#0B4D99',
+        borderWidth: 1,
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.x} vendor${ctx.parsed.x===1?'':'s'}` } }
+      },
+      scales: {
+        x: { beginAtZero: true, ticks: { color: '#344157' }, grid: { color: '#E7E8EC' } },
+        y: { ticks: { color: '#131E58', font: { weight: '600' } }, grid: { display: false } }
+      },
+      onClick: (evt, els) => {
+        if (!els.length) return;
+        const cat = cats[els[0].index];
+        if (state.selectedCats.has(cat)) state.selectedCats.delete(cat);
+        else state.selectedCats.add(cat);
+        render();
+      },
+      onHover: (evt, els) => {
+        if (evt.native && evt.native.target) evt.native.target.style.cursor = els.length ? 'pointer' : 'default';
+      },
+    }
+  });
+}
+function renderCategoryChart() { /* no-op — chart hidden */ }
+function updateCategoryChart() { return; }
+function updateCategoryChart_disabled() {
+  if (!categoryChart) return;
+  const cats = categoryChart.data.labels;
+  // Vendors per category among the CURRENT filter (category + country)
+  const filtered = chipFilteredVendors();
+  const catCounts = {};
+  filtered.forEach(v => {
+    const seen = new Set();
+    v.services.forEach(s => {
+      if (!seen.has(s[0])) { catCounts[s[0]] = (catCounts[s[0]]||0) + 1; seen.add(s[0]); }
+    });
+  });
+  categoryChart.data.datasets[0].data = cats.map(c => catCounts[c] || 0);
+  categoryChart.data.datasets[0].backgroundColor = cats.map(c => state.selectedCats.has(c) ? '#F5AB0A' : '#0077C8');
+  categoryChart.update('none');
+}
+
+// -------------------- Table (pure HTML) --------------------
+function renderTable() {
+  const tbody = document.getElementById('vendor-tbody');
+  const rows = filteredVendors();
+  // Sort
+  const dir = state.sortDir === 'asc' ? 1 : -1;
+  const col = state.sortCol;
+  rows.sort((a, b) => {
+    const av = (a[col] || '').toString().toLowerCase();
+    const bv = (b[col] || '').toString().toLowerCase();
+    if (av < bv) return -1 * dir;
+    if (av > bv) return  1 * dir;
+    return 0;
+  });
+  // Render
+  tbody.innerHTML = '';
+  if (rows.length === 0) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = '<td colspan="8" class="no-results">No vendors match the current filter. Try clearing some chips.</td>';
+    tbody.appendChild(tr);
+  } else {
+    const frag = document.createDocumentFragment();
+    rows.forEach(v => {
+      const tr = document.createElement('tr');
+      const svcsHtml   = renderServicesGrouped(v.services);
+      const jurisHtml  = v.juris.map(j => `<span class="juris-tag">${escape(j)}</span>`).join('');
+      const websiteHtml = v.website
+        ? `<a href="${escapeAttr(v.website)}" target="_blank" rel="noopener" class="website-link">Visit ↗</a>`
+        : '—';
+      tr.innerHTML = `
+        <td class="vendor-name">${escape(v.name)}</td>
+        <td>${escape(v.hq || '—')}</td>
+        <td><span class="confidence-pill ${v.confidence}">${v.confidence}</span></td>
+        <td>${escape(v.orgType || '')}</td>
+        <td>${websiteHtml}</td>
+        <td>${svcsHtml}</td>
+        <td>${jurisHtml}</td>
+        <td class="vendor-about">${escape(v.about || '')}</td>
+      `;
+      frag.appendChild(tr);
+    });
+    tbody.appendChild(frag);
+  }
+  const globalCount = globalNotShown();
+  const summaryEl = document.getElementById('result-summary');
+  summaryEl.innerHTML =
+    `Showing ${rows.length} vendor${rows.length===1?'':'s'} of ${DATA.vendors.length}`
+    + (globalCount > 0
+        ? ` &nbsp;·&nbsp; <span style="color: var(--cobalt); font-weight: 600; cursor: pointer;" id="add-global-link">+${globalCount} globally-active firms match — click to include</span>`
+        : '');
+  if (globalCount > 0) {
+    document.getElementById('add-global-link').addEventListener('click', () => {
+      state.selectedCountries.add('Global');
+      render();
+    });
+  }
+  // Sort indicators
+  document.querySelectorAll('.vendor-table th').forEach(th => {
+    th.classList.remove('sorted');
+    const arrow = th.querySelector('.sort-arrow');
+    if (arrow) arrow.textContent = '↕';
+  });
+  const activeTh = document.querySelector(`.vendor-table th[data-sort="${col}"]`);
+  if (activeTh) {
+    activeTh.classList.add('sorted');
+    const arrow = activeTh.querySelector('.sort-arrow');
+    if (arrow) arrow.textContent = state.sortDir === 'asc' ? '↑' : '↓';
+  }
+}
+function escape(s) {
+  return String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+function escapeAttr(s) { return escape(s); }
+
+// -------------------- Coverage gap heatmap --------------------
+function renderCoverageGaps() {
+  const container = document.getElementById('gap-heatmap');
+  if (!container) return;
+  const matrix = DATA.coverage_matrix || {};
+  // Every jurisdiction with at least one vendor, excluding regional shorthands
+  const REGIONAL_TAGS = new Set(['Global', 'European Union', 'Nordics', 'Europe', 'Americas', 'Asia', 'Asia Pacific', 'Middle East']);
+  const jurisdictions = Object.entries(DATA.country_counts)
+    .filter(([k]) => !REGIONAL_TAGS.has(k))
+    .sort(([, a], [, b]) => b - a)
+    .map(([k]) => k);
+
+  const headerCells = jurisdictions.map(j =>
+    '<th class="gap-country-h">' + escape(j) + '<br><span class="country-count">(' + DATA.country_counts[j] + ')</span></th>'
+  ).join('');
+  const rows = ['<tr><th class="gap-corner"></th>' + headerCells + '</tr>'];
+  // Body rows: one per category
+  CATEGORY_ORDER.forEach(cat => {
+    const catCoverage = matrix[cat] || {};
+    const colour = CATEGORY_COLOURS[cat] || '#858EA0';
+    // Coloured left-border and matching text colour — no pill background = far more legible
+    let row = `<tr><td class="gap-cat-name" style="border-left-color:${colour}; color:${colour}">${escape(cat)}</td>`;
+    jurisdictions.forEach(j => {
+      const count = catCoverage[j] || 0;
+      const bucket = count === 0 ? 'c0' : count === 1 ? 'c1' : count <= 3 ? 'c2' : count <= 6 ? 'c3' : count <= 10 ? 'c4' : 'c5';
+      row += `<td class="gap-cell-td"><div class="gap-cell ${bucket}" data-cat="${escapeAttr(cat)}" data-country="${escapeAttr(j)}" title="${escape(cat)} x ${escape(j)}: ${count} vendor${count===1?'':'s'} (click to filter)">${count}</div></td>`;
+    });
+    row += '</tr>';
+    rows.push(row);
+  });
+  container.innerHTML = `<div class="gap-scroll-wrap"><table class="gap-table">${rows.join('')}</table></div>`;
+
+  // Click a cell → apply that category + country as filter and scroll to table
+  container.querySelectorAll('.gap-cell').forEach(cell => {
+    cell.addEventListener('click', () => {
+      const cat = cell.dataset.cat;
+      const country = cell.dataset.country;
+      state.selectedCats.clear();
+      state.selectedSubcats.clear();
+      state.selectedCountries.clear();
+      state.selectedCats.add(cat);
+      state.selectedCountries.add(country);
+      render();
+      scrollToResults();
+    });
+  });
+}
+
+// SS&C palette colours per canonical category — deterministic and coherent
+const CATEGORY_COLOURS = {
+  "Fund Administration":       "#0077C8",   // SS&C Blue
+  "Corporate Services":        "#0B4D99",   // Cobalt
+  "Tax Services":              "#1099AC",   // Teal
+  "Legal Services":            "#076775",   // Dark Teal
+  "Regulatory & Compliance":   "#F5AB0A",   // Yellow (accent)
+  "Audit & Accounting":        "#131E58",   // Navy
+  "Advisory & Consulting":     "#344157",   // Dark Gray
+  "Private Wealth":            "#66ADDE",   // Blue 400
+  "Banking & Treasury":        "#3C71AD",   // Cobalt 500
+  "Technology & Data":         "#40ADBD",   // Teal 500
+  "HR & Talent":               "#858EA0",   // Gray
+  "Real Estate":               "#6AA4AC",   // Dark Teal 400
+};
+// Canonical display order — SS&C-relevant + operational categories first
+const CATEGORY_ORDER = [
+  "Fund Administration",
+  "Corporate Services",
+  "Regulatory & Compliance",
+  "Legal Services",
+  "Tax Services",
+  "Audit & Accounting",
+  "Advisory & Consulting",
+  "Banking & Treasury",
+  "Private Wealth",
+  "Technology & Data",
+  "HR & Talent",
+  "Real Estate",
+];
+
+function renderServicesGrouped(services) {
+  // Group [[cat, sub], ...] → { cat: [subs] }
+  const byCat = {};
+  services.forEach(([cat, sub]) => {
+    if (!byCat[cat]) byCat[cat] = [];
+    byCat[cat].push(sub);
+  });
+  Object.keys(byCat).forEach(k => byCat[k].sort());
+  const groups = CATEGORY_ORDER.filter(c => byCat[c]);
+  // Include any category not in the canonical order at the end (defensive)
+  Object.keys(byCat).forEach(c => { if (!groups.includes(c)) groups.push(c); });
+  return groups.map(cat => {
+    const colour = CATEGORY_COLOURS[cat] || "#858EA0";
+    const subsHtml = byCat[cat].map(s => `<span class="svc-sub-item">${escape(s)}</span>`).join('');
+    return `<div class="svc-group" style="border-left-color:${colour}">
+      <span class="svc-cat-name" style="color:${colour}">${escape(cat)}</span>
+      <span class="svc-subs">${subsHtml}</span>
+    </div>`;
+  }).join('');
+}
+
+// -------------------- Stats --------------------
+function updateStats() {
+  const filteredCount = filteredVendors().length;
+  document.getElementById('stat-vendors').textContent   = DATA.vendors.length;
+  document.getElementById('stat-cats').textContent      = DATA.categories.length;
+  document.getElementById('stat-countries').textContent = Object.keys(DATA.country_counts).filter(c => c !== 'Global').length;
+  document.getElementById('stat-filtered').textContent  = filteredCount;
+  const btnCount = document.getElementById('search-btn-count');
+  if (btnCount) btnCount.textContent = filteredCount;
+}
+
+// -------------------- Master render --------------------
+function render() {
+  // Re-render all chip groups so counts reflect the current filter state (faceted search)
+  renderCategoryChips();
+  renderSubcatChips();
+  renderRegionChips();
+  renderCountryChips();
+  updateChipActive();
+  updateCategoryChart();
+  renderTable();
+  updateStats();
+  renderCoverageGaps();
+}
+
+// -------------------- Init --------------------
+document.getElementById('global-count').textContent = DATA.global_count;
+function updateGlobalBadgeLabel() {
+  const el = document.getElementById('global-badge');
+  if (!el) return;
+  const active = state.selectedCountries.has('Global');
+  el.innerHTML = active
+    ? 'Exclude Global vendors'
+    : `Include Global vendors × <span id="global-count">${DATA.global_count}</span>`;
+  el.title = active
+    ? 'Click to remove globally-active vendors from the results'
+    : 'Click to include globally-active vendors in the results';
+}
+document.getElementById('global-badge').addEventListener('click', () => {
+  if (state.selectedCountries.has('Global')) state.selectedCountries.delete('Global');
+  else state.selectedCountries.add('Global');
+  render();
+  updateGlobalBadgeLabel();
+});
+updateGlobalBadgeLabel();
+document.getElementById('search-btn').addEventListener('click', () => {
+  scrollToResults();
+});
+
+// ---------------- Ask feature ----------------
+// Natural-language query parser: matches categories, subcategories, regions, countries.
+function processAsk(query) {
+  const q = (query || '').trim();
+  const resultEl = document.getElementById('ask-result');
+  if (!q) { resultEl.textContent = ''; return; }
+  const lower = q.toLowerCase();
+
+  // Clear filters — ask represents a fresh question
+  state.selectedCats.clear();
+  state.selectedSubcats.clear();
+  state.selectedRegions.clear();
+  state.selectedCountries.clear();
+
+  const matched = { cats: [], subcats: [], countries: [], regions: [] };
+
+  // Match regions first (short, uppercase acronyms)
+  Object.keys(REGIONS).forEach(r => {
+    // Word-boundary match on region name (case-insensitive)
+    const re = new RegExp(`\\b${r}\\b`, 'i');
+    if (re.test(q)) {
+      state.selectedRegions.add(r);
+      matched.regions.push(r);
+    }
+  });
+
+  // Match categories (longest first to prevent partial hits)
+  const cats = DATA.categories.slice().sort((a, b) => b.length - a.length);
+  cats.forEach(cat => {
+    if (lower.includes(cat.toLowerCase())) {
+      state.selectedCats.add(cat);
+      matched.cats.push(cat);
+    }
+  });
+
+  // Match subcategories — smarter matching so "company secretarial" hits even
+  // when the parent category "Corporate Services" isn't spelled out.
+  const STOPWORDS = new Set([
+    'and','or','the','for','with','from','into','onto','over','under',
+    'of','to','in','at','on','by','a','an','is','are','be','was','were',
+    'services','service'
+  ]);
+  const queryWords = new Set(
+    lower.split(/[^a-z0-9]+/).filter(w => w && !STOPWORDS.has(w))
+  );
+  // If a category was matched, only look at sub-cats within it (avoids
+  // "Corporate Services" spuriously pulling in "Corporate & commercial law").
+  const eligibleCats = matched.cats.length > 0 ? new Set(matched.cats) : null;
+
+  const allSubs = [];
+  Object.entries(DATA.subcategory_taxonomy || {}).forEach(([cat, subs]) => {
+    if (eligibleCats && !eligibleCats.has(cat)) return;
+    subs.forEach(sub => allSubs.push({ cat, sub, len: sub.length }));
+  });
+  allSubs.sort((a, b) => b.len - a.len);
+  allSubs.forEach(({ cat, sub }) => {
+    const key = `${cat}::${sub}`;
+    if (state.selectedSubcats.has(key)) return;
+    const subL = sub.toLowerCase();
+
+    // 1. Direct substring match on the whole sub-cat name
+    if (subL.length >= 6 && lower.includes(subL)) {
+      state.selectedSubcats.add(key);
+      matched.subcats.push(sub);
+      return;
+    }
+    // 2. Word-level match: any distinctive word overlap
+    const subWords = subL.split(/[^a-z0-9]+/).filter(w => w && !STOPWORDS.has(w));
+    const overlap = subWords.filter(w => queryWords.has(w));
+    // Distinctive = 4+ chars, or matches an uppercase acronym in the original (AML, KYC, etc.)
+    const hasDistinctive = overlap.some(w => w.length >= 4);
+    const hasAcronym = overlap.some(w => new RegExp(`\\b${w.toUpperCase()}\\b`).test(sub));
+    if (hasDistinctive || hasAcronym) {
+      state.selectedSubcats.add(key);
+      matched.subcats.push(sub);
+    }
+  });
+
+  // Match countries (longest first)
+  const countries = Object.keys(DATA.country_counts)
+    .filter(c => c !== 'Global')
+    .sort((a, b) => b.length - a.length);
+  countries.forEach(country => {
+    if (lower.includes(country.toLowerCase())) {
+      state.selectedCountries.add(country);
+      matched.countries.push(country);
+    }
+  });
+
+  // If we matched any structured filter, do NOT also apply the raw query as
+  // free-text search (it would AND with the parsed filters and return zero).
+  const matchedAny = matched.cats.length || matched.subcats.length
+                   || matched.regions.length || matched.countries.length;
+  const searchBox = document.getElementById('search-input');
+  if (matchedAny) {
+    state.search = '';
+    if (searchBox) searchBox.value = '';
+  } else {
+    state.search = q;
+    if (searchBox) searchBox.value = q;
+  }
+
+  render();
+
+  // Compose confirmation message
+  const parts = [];
+  if (matched.cats.length)     parts.push(`<b>${matched.cats.join('</b>, <b>')}</b>`);
+  if (matched.subcats.length)  parts.push(`sub-services: <b>${matched.subcats.join('</b>, <b>')}</b>`);
+  if (matched.regions.length)  parts.push(`region: <b>${matched.regions.join('</b>, <b>')}</b>`);
+  if (matched.countries.length)parts.push(`in <b>${matched.countries.join('</b>, <b>')}</b>`);
+  const filtered = filteredVendors();
+
+  if (parts.length === 0) {
+    resultEl.innerHTML =
+      `Interpreted as free-text search. Found <b>${filtered.length}</b> match${filtered.length===1?'':'es'} for "${escape(q)}". ` +
+      `Try wording like <em>"Corporate Services in Ireland"</em> or <em>"AIFMD in Luxembourg"</em>.`;
+  } else {
+    resultEl.innerHTML =
+      `Filtered by ${parts.join(' · ')} — <b>${filtered.length}</b> matching vendor${filtered.length===1?'':'s'}.`;
+  }
+  scrollToResults();
+}
+document.getElementById('ask-btn').addEventListener('click', () => {
+  processAsk(document.getElementById('ask-input').value);
+});
+document.getElementById('ask-input').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') { e.preventDefault(); processAsk(e.target.value); }
+});
+document.getElementById('reset-btn').addEventListener('click', () => {
+  state.selectedCats.clear();
+  state.selectedSubcats.clear();
+  state.selectedRegions.clear();
+  state.selectedCountries.clear();
+  state.search = '';
+  document.getElementById('search-input').value = '';
+  render();
+});
+document.getElementById('search-input').addEventListener('input', (e) => {
+  state.search = e.target.value.trim();
+  renderTable();
+  updateStats();
+});
+document.querySelectorAll('.vendor-table th[data-sort]').forEach(th => {
+  th.addEventListener('click', () => {
+    const col = th.dataset.sort;
+    if (state.sortCol === col) state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc';
+    else { state.sortCol = col; state.sortDir = 'asc'; }
+    renderTable();
+  });
+});
+
+renderCategoryChips();
+renderSubcatChips();
+renderRegionChips();
+renderCountryChips();
+renderCategoryChart();
+renderTable();
+updateStats();
+renderCoverageGaps();
+</script>
+</body>
+</html>
